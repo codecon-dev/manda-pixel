@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { GridBlock, GridStats } from '../lib/db';
 
 interface Point {
   x: number;
@@ -13,11 +14,17 @@ interface Camera {
   zoom: number;
 }
 
+interface PixelCanvasProps {
+  blocks?: GridBlock[];
+  stats?: GridStats;
+  onRefresh?: () => void;
+}
+
 const GRID_SIZE = 1000;
 const BLOCK_SIZE = 5; // Bloco mínimo de 5x5 pixels (R$ 1/pixel = R$ 25)
 const MAX_ZOOM = 24;
 
-export default function PixelCanvas() {
+export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -25,12 +32,30 @@ export default function PixelCanvas() {
   const cameraRef = useRef<Camera>({ x: 500, y: 500, zoom: 1.2 });
   const [zoomDisplay, setZoomDisplay] = useState<number>(120);
 
+  // Cache de imagens dos blocos publicados
+  const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
+
   // Coordenada do cursor / centro no mundo (alinhada em múltiplos de 5)
   const [cursorCoord, setCursorCoord] = useState<{ x: number; y: number; inside: boolean }>({
     x: 500,
     y: 500,
     inside: true,
   });
+
+  // Bloco sob o cursor (hover) para exibir tooltip
+  const [hoveredBlock, setHoveredBlock] = useState<{
+    block: GridBlock;
+    screenX: number;
+    screenY: number;
+  } | null>(null);
+
+  // Célula livre sob o cursor para feedback de snap
+  const [hoveredFreeCell, setHoveredFreeCell] = useState<{
+    x: number;
+    y: number;
+    screenX: number;
+    screenY: number;
+  } | null>(null);
 
   // Bloco selecionado pelo usuário (inicia no centro 500, 500)
   const [selectedBlock, setSelectedBlock] = useState<{ x: number; y: number } | null>({
@@ -65,6 +90,22 @@ export default function PixelCanvas() {
 
   // Dimensões da viewport
   const viewportRef = useRef<{ width: number; height: number }>({ width: 0, height: 0 });
+
+  // Pré-carrega imagens de blocos publicados e atualiza canvas quando prontas
+  useEffect(() => {
+    const cache = imageCacheRef.current;
+    blocks.forEach((block) => {
+      if (block.state === 'published' && block.imageUrl && !cache.has(block.imageUrl)) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = block.imageUrl;
+        img.onload = () => {
+          renderCanvas();
+        };
+        cache.set(block.imageUrl, img);
+      }
+    });
+  }, [blocks]);
 
   // Calcula zoom mínimo para que a grade 1000x1000 caiba confortavelmente
   const getMinZoom = useCallback(() => {
@@ -140,17 +181,95 @@ export default function PixelCanvas() {
     ctx.fillRect(screenOrigin.x, screenOrigin.y, gridWidthPx, gridHeightPx);
     ctx.restore();
 
-    // Bounding box visível no mundo para culling de linhas
+    // Bounding box visível no mundo para culling
     const wLeft = Math.max(0, screenToWorld(0, 0, cam).x);
     const wRight = Math.min(GRID_SIZE, screenToWorld(vp.width, 0, cam).x);
     const wTop = Math.max(0, screenToWorld(0, 0, cam).y);
     const wBottom = Math.min(GRID_SIZE, screenToWorld(0, vp.height, cam).y);
 
+    // 1. DESENHO DOS BLOCOS OCUPADOS (PUBLICADOS, EM ANÁLISE, RESERVADOS)
+    const imageCache = imageCacheRef.current;
+
+    for (const block of blocks) {
+      // Culling: desenha apenas se intersectar a viewport visível
+      if (
+        block.x + block.w < wLeft ||
+        block.x > wRight ||
+        block.y + block.h < wTop ||
+        block.y > wBottom
+      ) {
+        continue;
+      }
+
+      const bScreen = worldToScreen(block.x, block.y, cam);
+      const bW = block.w * cam.zoom;
+      const bH = block.h * cam.zoom;
+
+      if (block.state === 'published') {
+        // Bloco Publicado com imagem
+        const img = block.imageUrl ? imageCache.get(block.imageUrl) : null;
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, bScreen.x, bScreen.y, bW, bH);
+        } else {
+          // Fallback elegante enquanto a imagem carrega
+          ctx.fillStyle = '#e2e8f0';
+          ctx.fillRect(bScreen.x, bScreen.y, bW, bH);
+          ctx.fillStyle = '#94a3b8';
+          const dotSize = Math.max(2, Math.min(6, Math.min(bW, bH) * 0.25));
+          ctx.beginPath();
+          ctx.arc(bScreen.x + bW / 2, bScreen.y + bH / 2, dotSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Borda sutil nos blocos publicados
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.22)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bScreen.x, bScreen.y, bW, bH);
+      } else if (block.state === 'in_review') {
+        // Bloco Vendido, em análise (tom âmbar translúcido com listras diagonais)
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(bScreen.x, bScreen.y, bW, bH);
+        ctx.clip();
+
+        // Fundo âmbar translúcido
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.22)';
+        ctx.fillRect(bScreen.x, bScreen.y, bW, bH);
+
+        // Listras diagonais
+        ctx.strokeStyle = 'rgba(217, 119, 6, 0.35)';
+        ctx.lineWidth = Math.max(1, 1.2 * (cam.zoom >= 2 ? 1.5 : 1));
+        ctx.beginPath();
+        const stripeStep = Math.max(6, 8 * cam.zoom * 0.5);
+        for (let d = -bH; d < bW + bH; d += stripeStep) {
+          ctx.moveTo(bScreen.x + d, bScreen.y);
+          ctx.lineTo(bScreen.x + d + bH, bScreen.y + bH);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Borda âmbar nítida
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(bScreen.x, bScreen.y, bW, bH);
+      } else if (block.state === 'reserved') {
+        // Bloco Reservado (aguardando pagamento) - tom roxo/ciano com borda tracejada
+        ctx.save();
+        ctx.fillStyle = 'rgba(147, 51, 234, 0.16)';
+        ctx.fillRect(bScreen.x, bScreen.y, bW, bH);
+
+        ctx.strokeStyle = '#9333ea';
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([4, 3]);
+        ctx.strokeRect(bScreen.x, bScreen.y, bW, bH);
+        ctx.restore();
+      }
+    }
+
+    // 2. GRID LINES (LINHAS DE REFERÊNCIA)
     if (wLeft < wRight && wTop < wBottom) {
-      // 1. Linhas finas de 5 em 5 pixels (blocos mínimos de R$ 25)
-      // Visíveis quando o zoom permite enxergar sem poluir a tela
+      // Linhas finas de 5 em 5 pixels (blocos mínimos de R$ 25)
       if (cam.zoom >= 1.2) {
-        const opacity = Math.min(0.2, (cam.zoom - 1.2) * 0.1);
+        const opacity = Math.min(0.18, (cam.zoom - 1.2) * 0.08);
         ctx.strokeStyle = `rgba(100, 116, 139, ${opacity.toFixed(3)})`;
         ctx.lineWidth = 1;
 
@@ -158,7 +277,7 @@ export default function PixelCanvas() {
         const start5X = Math.floor(wLeft / 5) * 5;
         const end5X = Math.ceil(wRight / 5) * 5;
         for (let wx = start5X; wx <= end5X; wx += 5) {
-          if (wx % 50 === 0) continue; // Pula múltiplos de 50
+          if (wx % 50 === 0) continue;
           const sx = Math.round(worldToScreen(wx, 0, cam).x) + 0.5;
           const syTop = Math.max(screenOrigin.y, 0);
           const syBottom = Math.min(screenOrigin.y + gridHeightPx, vp.height);
@@ -179,9 +298,9 @@ export default function PixelCanvas() {
         ctx.stroke();
       }
 
-      // 2. Linhas de referência a cada 50 pixels
+      // Linhas de referência a cada 50 pixels
       if (cam.zoom >= 0.4) {
-        ctx.strokeStyle = 'rgba(106, 51, 120, 0.2)';
+        ctx.strokeStyle = 'rgba(106, 51, 120, 0.18)';
         ctx.lineWidth = 1;
 
         ctx.beginPath();
@@ -209,8 +328,8 @@ export default function PixelCanvas() {
         ctx.stroke();
       }
 
-      // 3. Linhas principais a cada 100 pixels
-      ctx.strokeStyle = 'rgba(106, 51, 120, 0.4)';
+      // Linhas principais a cada 100 pixels
+      ctx.strokeStyle = 'rgba(106, 51, 120, 0.35)';
       ctx.lineWidth = 1.2;
 
       ctx.beginPath();
@@ -238,9 +357,9 @@ export default function PixelCanvas() {
       ctx.stroke();
     }
 
-    // 4. Eixos centrais em 500, 500
+    // 3. EIXOS CENTRAIS (500, 500)
     const centerScreen = worldToScreen(500, 500, cam);
-    ctx.strokeStyle = 'rgba(106, 51, 120, 0.75)';
+    ctx.strokeStyle = 'rgba(106, 51, 120, 0.7)';
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
@@ -251,16 +370,27 @@ export default function PixelCanvas() {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // 5. Destaque elegante do ponto central (500, 500)
+    // Destaque do ponto central (500, 500)
     ctx.beginPath();
-    ctx.arc(centerScreen.x, centerScreen.y, 8, 0, Math.PI * 2);
+    ctx.arc(centerScreen.x, centerScreen.y, 7, 0, Math.PI * 2);
     ctx.fillStyle = '#FCD953';
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#6A3378';
     ctx.stroke();
 
-    // 6. Bloco Selecionado
+    // 4. DESTAQUE DO SNAP 5×5 SOB O CURSOR (ESPAÇO LIVRE)
+    if (hoveredFreeCell && cursorCoord.inside && !isDraggingRef.current) {
+      const snapScreen = worldToScreen(hoveredFreeCell.x, hoveredFreeCell.y, cam);
+      const snapSize = BLOCK_SIZE * cam.zoom;
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.18)';
+      ctx.fillRect(snapScreen.x, snapScreen.y, snapSize, snapSize);
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.7)';
+      ctx.lineWidth = Math.max(1, cam.zoom * 0.15);
+      ctx.strokeRect(snapScreen.x, snapScreen.y, snapSize, snapSize);
+    }
+
+    // 5. BLOCO SELECIONADO PELO USUÁRIO
     if (selectedBlock) {
       const bScreen = worldToScreen(selectedBlock.x, selectedBlock.y, cam);
       const bSize = BLOCK_SIZE * cam.zoom;
@@ -276,15 +406,12 @@ export default function PixelCanvas() {
       ctx.fillRect(bScreen.x, bScreen.y, markerSize, markerSize);
     }
 
-    // 7. Borda externa clara e robusta delimitando os 1000 x 1000 pixels
+    // 6. BORDA EXTERNA DELIMITANDO OS 1000×1000 PIXELS
     ctx.strokeStyle = '#6A3378';
     ctx.lineWidth = 2.5;
     ctx.strokeRect(screenOrigin.x, screenOrigin.y, gridWidthPx, gridHeightPx);
 
-    // Cantos destacados da grade de 1000x1000
-    const cornerLen = 14;
-    ctx.strokeStyle = '#FCD953';
-    ctx.lineWidth = 3.5;
+    // Cantos destacados da folha
     const corners = [
       [screenOrigin.x, screenOrigin.y],
       [screenOrigin.x + gridWidthPx, screenOrigin.y],
@@ -294,9 +421,10 @@ export default function PixelCanvas() {
     for (const [cx, cy] of corners) {
       ctx.beginPath();
       ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#FCD953';
       ctx.fill();
     }
-  }, [screenToWorld, worldToScreen, selectedBlock]);
+  }, [screenToWorld, worldToScreen, selectedBlock, hoveredFreeCell, cursorCoord.inside, blocks]);
 
   // Loop de Animação e Inércia
   useEffect(() => {
@@ -437,7 +565,6 @@ export default function PixelCanvas() {
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     isTransitioningRef.current = false;
     canvasRef.current?.setPointerCapture(e.pointerId);
-
     activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     pointerDistanceTraveledRef.current = 0;
 
@@ -468,12 +595,43 @@ export default function PixelCanvas() {
       active.set(e.pointerId, { x: e.clientX, y: e.clientY });
     }
 
-    // Atualiza coordenada do cursor no HUD
+    // Ponto no mundo
     const worldPoint = screenToWorld(e.clientX, e.clientY);
     const alignedX = Math.floor(worldPoint.x / BLOCK_SIZE) * BLOCK_SIZE;
     const alignedY = Math.floor(worldPoint.y / BLOCK_SIZE) * BLOCK_SIZE;
     const inside = alignedX >= 0 && alignedX < GRID_SIZE && alignedY >= 0 && alignedY < GRID_SIZE;
     setCursorCoord({ x: alignedX, y: alignedY, inside });
+
+    // Detecção de bloco ocupado vs espaço livre para tooltips e feedback de snap
+    if (inside && !isDraggingRef.current) {
+      const foundBlock = blocks.find(
+        (b) =>
+          worldPoint.x >= b.x &&
+          worldPoint.x < b.x + b.w &&
+          worldPoint.y >= b.y &&
+          worldPoint.y < b.y + b.h
+      );
+
+      if (foundBlock) {
+        setHoveredBlock({
+          block: foundBlock,
+          screenX: e.clientX,
+          screenY: e.clientY,
+        });
+        setHoveredFreeCell(null);
+      } else {
+        setHoveredBlock(null);
+        setHoveredFreeCell({
+          x: alignedX,
+          y: alignedY,
+          screenX: e.clientX,
+          screenY: e.clientY,
+        });
+      }
+    } else {
+      setHoveredBlock(null);
+      setHoveredFreeCell(null);
+    }
 
     // Drag com 1 ponteiro
     if (isDraggingRef.current && active.size === 1) {
@@ -535,14 +693,33 @@ export default function PixelCanvas() {
   const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
     activePointersRef.current.delete(e.pointerId);
 
-    // Se foi apenas um clique (sem arraste relevante), seleciona o bloco
+    // Se foi apenas um clique sem arrastar
     if (pointerDistanceTraveledRef.current < 6) {
       const worldPoint = screenToWorld(e.clientX, e.clientY);
       const blockX = Math.floor(worldPoint.x / BLOCK_SIZE) * BLOCK_SIZE;
       const blockY = Math.floor(worldPoint.y / BLOCK_SIZE) * BLOCK_SIZE;
+
       if (blockX >= 0 && blockX < GRID_SIZE && blockY >= 0 && blockY < GRID_SIZE) {
-        setSelectedBlock({ x: blockX, y: blockY });
-        renderCanvas();
+        // Verifica se clicou em um bloco ocupado
+        const clickedBlock = blocks.find(
+          (b) =>
+            worldPoint.x >= b.x &&
+            worldPoint.x < b.x + b.w &&
+            worldPoint.y >= b.y &&
+            worldPoint.y < b.y + b.h
+        );
+
+        if (clickedBlock) {
+          // Se for publicado e possuir linkUrl, abre em nova aba
+          if (clickedBlock.state === 'published' && clickedBlock.linkUrl) {
+            window.open(clickedBlock.linkUrl, '_blank', 'noopener,noreferrer');
+          }
+          // Não seleciona para compra bloco ocupado
+        } else {
+          // Espaço livre: seleciona o bloco de 5x5
+          setSelectedBlock({ x: blockX, y: blockY });
+          renderCanvas();
+        }
       }
     }
 
@@ -593,9 +770,31 @@ export default function PixelCanvas() {
     };
   }, [handleWheel]);
 
+  // Extrai domínio formatado de uma URL de anúncio
+  const formatDomain = (urlStr?: string): string => {
+    if (!urlStr) return '';
+    try {
+      const u = new URL(urlStr.startsWith('http') ? urlStr : `https://${urlStr}`);
+      return u.hostname.replace(/^www\./, '');
+    } catch {
+      return urlStr;
+    }
+  };
+
+  // Dados reais de estatísticas
+  const soldPixelsFormatted = useMemo(() => {
+    const sold = stats?.soldPixels ?? 0;
+    return sold.toLocaleString('pt-BR');
+  }, [stats?.soldPixels]);
+
+  const availablePixelsFormatted = useMemo(() => {
+    const avail = stats?.availablePixels ?? 1000000;
+    return avail.toLocaleString('pt-BR');
+  }, [stats?.availablePixels]);
+
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden select-none bg-stone-100">
-      {/* Elemento Canvas */}
+      {/* Elemento Canvas Principal */}
       <canvas
         ref={canvasRef}
         className="block w-full h-full cursor-grab active:cursor-grabbing touch-none"
@@ -605,9 +804,9 @@ export default function PixelCanvas() {
         onPointerCancel={handlePointerUp}
       />
 
-      {/* HEADER FLUTUANTE DISCRETO */}
+      {/* HEADER FLUTUANTE DISCRETO COM DADOS REAIS E NAVEGAÇÃO */}
       <header className="absolute top-3 inset-x-3 sm:top-4 sm:inset-x-6 pointer-events-none z-20 flex items-center justify-between gap-2">
-        {/* Identidade do Manda Pixel */}
+        {/* Identidade do Manda Pixel + Estatísticas Reais */}
         <div className="pointer-events-auto flex items-center gap-2.5 bg-white border border-stone-300 shadow-md px-3.5 py-2 rounded-2xl">
           <img src="/logo.svg" alt="Manda Pixel Logo" className="w-6 h-6 shrink-0" />
           <div className="flex flex-col">
@@ -617,9 +816,11 @@ export default function PixelCanvas() {
                 R$ 1/px
               </span>
             </div>
-            <span className="text-xs text-stone-700 font-semibold hidden md:inline leading-tight mt-0.5">
-              1.000.000 pixels • Blocos de 5×5
-            </span>
+            <div className="flex items-center gap-2 text-[11px] text-stone-700 font-semibold leading-tight mt-0.5">
+              <span className="text-emerald-700 font-bold">{availablePixelsFormatted} livres</span>
+              <span>•</span>
+              <span className="text-purple-950 font-bold">{soldPixelsFormatted} vendidos</span>
+            </div>
           </div>
         </div>
 
@@ -645,6 +846,89 @@ export default function PixelCanvas() {
           </button>
         </div>
       </header>
+
+      {/* LEGENDA COMPACTA DOS 4 ESTADOS */}
+      <div className="absolute top-16 left-3 sm:top-20 sm:left-6 pointer-events-none z-10 hidden sm:flex items-center gap-2.5 bg-white/95 backdrop-blur-sm border border-stone-300 shadow-sm px-3 py-1.5 rounded-xl text-[11px] text-stone-800 font-semibold">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-white border border-stone-400" />
+          <span>Livre</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
+          <span>Publicado</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 border border-amber-600" />
+          <span>Em análise</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-purple-400 border border-purple-600 border-dashed" />
+          <span>Reservado</span>
+        </div>
+      </div>
+
+      {/* TOOLTIP FLUTUANTE DE HOVER NO CANVAS */}
+      {hoveredBlock && (
+        <div
+          className="pointer-events-none fixed z-30 max-w-xs -translate-x-1/2 -translate-y-full mb-3 px-3 py-2 bg-stone-950 text-white text-xs rounded-xl shadow-xl border border-stone-700 animate-in fade-in zoom-in-95"
+          style={{
+            left: `${hoveredBlock.screenX}px`,
+            top: `${hoveredBlock.screenY - 8}px`,
+          }}
+        >
+          {hoveredBlock.block.state === 'published' && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-amber-300">
+                <span>{hoveredBlock.block.altText || 'Anúncio publicado'}</span>
+                {hoveredBlock.block.xHandle && (
+                  <span className="text-stone-400 font-normal">
+                    @{hoveredBlock.block.xHandle.replace(/^@/, '')}
+                  </span>
+                )}
+              </div>
+              {hoveredBlock.block.linkUrl && (
+                <div className="text-[11px] text-stone-300 flex items-center gap-1">
+                  <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  <span className="truncate">{formatDomain(hoveredBlock.block.linkUrl)}</span>
+                  <span className="text-[10px] text-stone-400">• Clique para abrir</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {hoveredBlock.block.state === 'in_review' && (
+            <div className="flex items-center gap-1.5 text-amber-300 font-bold">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span>Vendido • Em análise</span>
+            </div>
+          )}
+
+          {hoveredBlock.block.state === 'reserved' && (
+            <div className="flex items-center gap-1.5 text-purple-300 font-bold">
+              <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+              <span>Reservado (aguardando pagamento)</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* FEEDBACK DE SNAP FLUTUANTE QUANDO SOBRE CÉLULA LIVRE */}
+      {!hoveredBlock && hoveredFreeCell && (
+        <div
+          className="pointer-events-none fixed z-30 -translate-x-1/2 -translate-y-full mb-3 px-2 py-1 bg-stone-900/90 text-white text-[11px] font-medium rounded-lg shadow-md border border-stone-700 animate-in fade-in"
+          style={{
+            left: `${hoveredFreeCell.screenX}px`,
+            top: `${hoveredFreeCell.screenY - 6}px`,
+          }}
+        >
+          <div className="flex items-center gap-1 text-emerald-400 font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span>Disponível • 5×5 px (R$ 25)</span>
+          </div>
+        </div>
+      )}
 
       {/* BARRA INFERIOR / HUD & CONTROLES */}
       <div className="absolute bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-6 pointer-events-none z-20 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2.5">
@@ -726,7 +1010,7 @@ export default function PixelCanvas() {
 
       {/* MODAL / DRAWER DE COMPRA DO BLOCO SELECIONADO */}
       {purchaseModalOpen && (
-        <div className="absolute inset-0 z-30 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="absolute inset-0 z-40 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-stone-200 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
@@ -770,7 +1054,10 @@ export default function PixelCanvas() {
                 Continuar Navegando
               </button>
               <button
-                onClick={() => setPurchaseModalOpen(false)}
+                onClick={() => {
+                  setPurchaseModalOpen(false);
+                  if (onRefresh) onRefresh();
+                }}
                 className="flex-1 py-2 rounded-xl bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold transition shadow"
               >
                 Confirmar Bloco

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import Link from 'next/link';
 
 interface Point {
   x: number;
@@ -626,18 +625,18 @@ export default function PixelCanvas() {
 
         {/* Links de navegação e Chamada */}
         <div className="pointer-events-auto flex items-center gap-1.5 bg-white border border-stone-300 shadow-md px-2 py-1.5 rounded-2xl text-xs font-bold text-stone-950">
-          <Link
+          <a
             href="/diario"
             className="px-2.5 py-1 rounded-xl hover:bg-stone-100 hover:text-purple-950 transition"
           >
             Diário
-          </Link>
-          <Link
+          </a>
+          <a
             href="/time"
             className="px-2.5 py-1 rounded-xl hover:bg-stone-100 hover:text-purple-950 transition"
           >
             Time
-          </Link>
+          </a>
           <button
             onClick={() => setPurchaseModalOpen(true)}
             className="hidden sm:inline-flex items-center px-3 py-1 rounded-xl bg-purple-900 hover:bg-purple-800 text-white font-bold transition shadow-sm text-xs"

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { GridBlock, GridStats } from '../lib/db';
+import BuyPanel from './BuyPanel';
 
 interface Point {
   x: number;
@@ -226,8 +227,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
   const dragStartAreaRef = useRef<SelectedArea | null>(null);
   const dragStartWorldPointRef = useRef<Point>({ x: 0, y: 0 });
 
-  // Modal/Feedback de compra ao clicar no botão
-  const [purchaseModalOpen, setPurchaseModalOpen] = useState<boolean>(false);
+  // Painel lateral e gaveta de compra com preview em tempo real
+  const [buyPanelOpen, setBuyPanelOpen] = useState<boolean>(false);
+  const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
+  const previewImageRef = useRef<HTMLImageElement | null>(null);
 
   // Presença ao vivo (heartbeat)
   const [onlineCount, setOnlineCount] = useState<number>(1);
@@ -627,9 +630,14 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
       const bW = selectedArea.w * cam.zoom;
       const bH = selectedArea.h * cam.zoom;
 
-      // Preenchimento semitransparente vibrante
-      ctx.fillStyle = 'rgba(106, 51, 120, 0.22)';
-      ctx.fillRect(bScreen.x, bScreen.y, bW, bH);
+      // Preview da imagem do anuncio recortada ou preenchimento padrao
+      const previewImg = previewImageRef.current;
+      if (previewImg && previewImg.complete) {
+        ctx.drawImage(previewImg, bScreen.x, bScreen.y, bW, bH);
+      } else {
+        ctx.fillStyle = 'rgba(106, 51, 120, 0.22)';
+        ctx.fillRect(bScreen.x, bScreen.y, bW, bH);
+      }
 
       // Grade interna 5x5 quando houver zoom suficiente
       if (cam.zoom >= 0.85 && (bW > 16 || bH > 16)) {
@@ -760,6 +768,21 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
       ctx.fill();
     }
   }, [screenToWorld, worldToScreen, selectedArea, hoveredFreeCell, cursorCoord.inside, blocks]);
+
+  // Atualiza preview de recorte no bloco selecionado quando o usuário envia imagem
+  useEffect(() => {
+    if (!previewDataUrl) {
+      previewImageRef.current = null;
+      renderCanvas();
+      return;
+    }
+    const img = new Image();
+    img.src = previewDataUrl;
+    img.onload = () => {
+      previewImageRef.current = img;
+      renderCanvas();
+    };
+  }, [previewDataUrl, renderCanvas]);
 
   // Loop de Animação e Inércia
   useEffect(() => {
@@ -1337,6 +1360,26 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
     }
   }, []);
 
+  // Ajuste fino de dimensoes do bloco via BuyPanel em passos de 5px
+  const handleResizeStep = useCallback((axis: 'w' | 'h', delta: number) => {
+    if (!selectedAreaRef.current) return;
+    const cur = selectedAreaRef.current;
+    const nextW = axis === 'w' ? cur.w + delta : cur.w;
+    const nextH = axis === 'h' ? cur.h + delta : cur.h;
+
+    if (nextW < 5 || nextH < 5 || cur.x + nextW > 1000 || cur.y + nextH > 1000) {
+      setCollisionWarning('Limite da grade atingido');
+      return;
+    }
+
+    if (isAreaFree(cur.x, cur.y, nextW, nextH, blocksRef.current)) {
+      setSelectedArea({ ...cur, w: nextW, h: nextH });
+      setCollisionWarning(null);
+    } else {
+      setCollisionWarning('Espaco ocupado ao lado');
+    }
+  }, []);
+
   // Ação principal: Botão CTA "Comprar pixels"
   const handleCtaBuyPixels = useCallback(() => {
     if (!selectedAreaRef.current) {
@@ -1346,7 +1389,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
       const centerY = freeArea.y + freeArea.h / 2;
       smoothAnimateTo(centerX, centerY, 2.4, 450);
     } else {
-      setPurchaseModalOpen(true);
+      setBuyPanelOpen(true);
     }
   }, [smoothAnimateTo]);
 
@@ -1786,7 +1829,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
                 Cancelar
               </button>
               <button
-                onClick={() => setPurchaseModalOpen(true)}
+                onClick={() => setBuyPanelOpen(true)}
                 className="flex-1 py-2 px-3 rounded-xl bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold transition shadow-md active:scale-[0.98] flex items-center justify-center gap-1.5"
               >
                 <span>Continuar com este espaço</span>
@@ -1870,68 +1913,18 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
         </div>
       </div>
 
-      {/* MODAL / DRAWER DE COMPRA DO BLOCO SELECIONADO */}
-      {purchaseModalOpen && (
-        <div className="absolute inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-stone-200 space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2">
-                <img src="/logo.svg" alt="Manda Pixel Logo" className="w-6 h-6" />
-                <h3 className="font-extrabold text-stone-950 text-base">Comprar pixels • R$ 1/px</h3>
-              </div>
-              <button
-                onClick={() => setPurchaseModalOpen(false)}
-                className="text-stone-500 hover:text-stone-900 text-lg font-bold p-1 leading-none"
-                aria-label="Fechar"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="p-3.5 bg-stone-50 rounded-2xl border border-stone-200 text-xs space-y-2">
-              <div className="flex justify-between text-stone-700">
-                <span>Coordenadas:</span>
-                <strong className="font-mono text-stone-950">
-                  X: {selectedArea?.x ?? 500}, Y: {selectedArea?.y ?? 500}
-                </strong>
-              </div>
-              <div className="flex justify-between text-stone-700">
-                <span>Dimensões:</span>
-                <strong className="text-stone-950">
-                  {selectedArea?.w ?? 10} × {selectedArea?.h ?? 10} pixels ({((selectedArea?.w ?? 10) * (selectedArea?.h ?? 10)).toLocaleString('pt-BR')} px)
-                </strong>
-              </div>
-              <div className="flex justify-between text-stone-700 border-t border-stone-200 pt-2 font-bold">
-                <span>Total a pagar:</span>
-                <span className="text-purple-950 text-sm font-extrabold">
-                  R$ {((selectedArea?.w ?? 10) * (selectedArea?.h ?? 10)).toLocaleString('pt-BR')},00 via Pix
-                </span>
-              </div>
-            </div>
-
-            <p className="text-[11px] text-stone-600 leading-relaxed">
-              Cada pixel custa R$ 1,00 fixo. Seu espaço fica registrado para sempre na grade de 1.000.000 de pixels com imagem e link direto.
-            </p>
-
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={() => setPurchaseModalOpen(false)}
-                className="flex-1 py-2 rounded-xl border border-stone-300 text-stone-800 text-xs font-semibold hover:bg-stone-50 transition"
-              >
-                Ajustar seleção
-              </button>
-              <button
-                onClick={() => {
-                  setPurchaseModalOpen(false);
-                  if (onRefresh) onRefresh();
-                }}
-                className="flex-1 py-2 rounded-xl bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold transition shadow"
-              >
-                Confirmar bloco
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* PAINEL LATERAL / GAVETA DE COMPRA COM UPLOAD E VALIDACAO */}
+      {selectedArea && (
+        <BuyPanel
+          isOpen={buyPanelOpen}
+          onClose={() => setBuyPanelOpen(false)}
+          selection={selectedArea}
+          onResizeStep={handleResizeStep}
+          onPreviewChange={setPreviewDataUrl}
+          onSubmit={() => {
+            if (onRefresh) onRefresh();
+          }}
+        />
       )}
     </div>
   );

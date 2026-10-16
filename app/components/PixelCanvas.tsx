@@ -66,6 +66,74 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
   // Modal/Feedback de compra ao clicar no botão
   const [purchaseModalOpen, setPurchaseModalOpen] = useState<boolean>(false);
 
+  // Presença ao vivo (heartbeat)
+  const [onlineCount, setOnlineCount] = useState<number>(1);
+
+  // Banner compacto de boas-vindas na primeira visita
+  const [showWelcome, setShowWelcome] = useState<boolean>(false);
+  const showWelcomeRef = useRef<boolean>(false);
+
+  const dismissWelcome = useCallback(() => {
+    setShowWelcome(false);
+    showWelcomeRef.current = false;
+    try {
+      localStorage.setItem('mandapixel_welcome_dismissed', 'true');
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Verifica primeira visita para exibir boas-vindas
+  useEffect(() => {
+    try {
+      const dismissed = localStorage.getItem('mandapixel_welcome_dismissed');
+      if (!dismissed) {
+        setShowWelcome(true);
+        showWelcomeRef.current = true;
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Heartbeat de presença a cada 25s
+  useEffect(() => {
+    const getClientId = (): string => {
+      try {
+        let id = sessionStorage.getItem('mandapixel_client_id');
+        if (!id) {
+          id = 'mp_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now().toString(36);
+          sessionStorage.setItem('mandapixel_client_id', id);
+        }
+        return id;
+      } catch {
+        return 'mp_' + Math.random().toString(36).substring(2, 11);
+      }
+    };
+
+    const clientId = getClientId();
+
+    const sendHeartbeat = async () => {
+      try {
+        const res = await fetch(`/api/presence?clientId=${encodeURIComponent(clientId)}`, {
+          cache: 'no-store',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.count === 'number' && data.count >= 1) {
+            setOnlineCount(data.count);
+          }
+        }
+      } catch {
+        // mantém o contador atual em caso de instabilidade de rede
+      }
+    };
+
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 25000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Estados de interação e arraste
   const isDraggingRef = useRef(false);
   const dragStartScreenRef = useRef<Point>({ x: 0, y: 0 });
@@ -642,6 +710,11 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
       const dyScreen = e.clientY - lastPointerPosRef.current.y;
       pointerDistanceTraveledRef.current += Math.hypot(dxScreen, dyScreen);
 
+      // Fecha o banner de boas-vindas automaticamente quando o usuário começar a arrastar
+      if (showWelcomeRef.current && pointerDistanceTraveledRef.current > 10) {
+        dismissWelcome();
+      }
+
       const cam = cameraRef.current;
       cam.x = clampCameraPosition(cam.x - dxScreen / cam.zoom, cam.y - dyScreen / cam.zoom).x;
       cam.y = clampCameraPosition(cam.x, cam.y - dyScreen / cam.zoom).y;
@@ -782,15 +855,25 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
   };
 
   // Dados reais de estatísticas
+  const soldPixels = stats?.soldPixels ?? 0;
+  const totalPixels = stats?.totalPixels || 1000000;
+  const availablePixels = stats?.availablePixels ?? Math.max(0, totalPixels - soldPixels);
+
   const soldPixelsFormatted = useMemo(() => {
-    const sold = stats?.soldPixels ?? 0;
-    return sold.toLocaleString('pt-BR');
-  }, [stats?.soldPixels]);
+    return soldPixels.toLocaleString('pt-BR');
+  }, [soldPixels]);
 
   const availablePixelsFormatted = useMemo(() => {
-    const avail = stats?.availablePixels ?? 1000000;
-    return avail.toLocaleString('pt-BR');
-  }, [stats?.availablePixels]);
+    return availablePixels.toLocaleString('pt-BR');
+  }, [availablePixels]);
+
+  const soldPercentage = useMemo(() => {
+    if (soldPixels === 0) return '0%';
+    const pct = (soldPixels / totalPixels) * 100;
+    if (pct < 0.01) return '<0.01%';
+    if (pct < 1) return `${pct.toFixed(2)}%`;
+    return `${pct.toFixed(1)}%`;
+  }, [soldPixels, totalPixels]);
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden select-none bg-stone-100">
@@ -804,68 +887,157 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
         onPointerCancel={handlePointerUp}
       />
 
-      {/* HEADER FLUTUANTE DISCRETO COM DADOS REAIS E NAVEGAÇÃO */}
-      <header className="absolute top-3 inset-x-3 sm:top-4 sm:inset-x-6 pointer-events-none z-20 flex items-center justify-between gap-2">
-        {/* Identidade do Manda Pixel + Estatísticas Reais */}
-        <div className="pointer-events-auto flex items-center gap-2.5 bg-white border border-stone-300 shadow-md px-3.5 py-2 rounded-2xl">
-          <img src="/logo.svg" alt="Manda Pixel Logo" className="w-6 h-6 shrink-0" />
-          <div className="flex flex-col">
+      {/* HEADER FLUTUANTE COM DADOS REAIS, PRESENÇA AO VIVO E CONVERSÃO */}
+      <header className="absolute top-3 inset-x-3 sm:top-4 sm:inset-x-6 pointer-events-none z-20 flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-2">
+          {/* Esquerda: Identidade Manda Pixel + Pílula de Presença ao Vivo */}
+          <div className="pointer-events-auto flex items-center gap-2 bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-2xl">
+            <img src="/logo.svg" alt="Manda Pixel Logo" className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
             <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-stone-950 tracking-tight text-sm leading-none">Manda Pixel</span>
+              <span className="font-extrabold text-stone-950 tracking-tight text-xs sm:text-sm leading-none">
+                Manda Pixel
+              </span>
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-stone-950 leading-none">
                 R$ 1/px
               </span>
             </div>
-            <div className="flex items-center gap-2 text-[11px] text-stone-700 font-semibold leading-tight mt-0.5">
-              <span className="text-emerald-700 font-bold">{availablePixelsFormatted} livres</span>
-              <span>•</span>
-              <span className="text-purple-950 font-bold">{soldPixelsFormatted} vendidos</span>
+
+            <div className="w-[1px] h-3.5 bg-stone-300 mx-0.5" />
+
+            {/* Pílula de presença ao vivo */}
+            <div
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-950 text-[11px] font-semibold"
+              title={`${onlineCount} pessoas conectadas agora`}
+            >
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+              </span>
+              <span className="font-bold text-emerald-950">{onlineCount}</span>
+              <span className="text-emerald-900 hidden sm:inline">explorando agora</span>
+              <span className="text-emerald-900 sm:hidden">online</span>
             </div>
+          </div>
+
+          {/* Direita: Links e Botão Principal "Comprar pixels" */}
+          <div className="pointer-events-auto flex items-center gap-1.5 bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm p-1.5 rounded-2xl">
+            <a
+              href="/diario"
+              className="hidden md:inline-flex px-2.5 py-1 text-xs font-bold text-stone-800 hover:text-purple-950 rounded-xl hover:bg-stone-100 transition"
+            >
+              Diário
+            </a>
+            <a
+              href="/time"
+              className="hidden md:inline-flex px-2.5 py-1 text-xs font-bold text-stone-800 hover:text-purple-950 rounded-xl hover:bg-stone-100 transition"
+            >
+              Time
+            </a>
+            <button
+              onClick={() => setPurchaseModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-900 hover:bg-purple-800 text-white font-bold transition shadow-sm text-xs active:scale-95"
+            >
+              <svg className="w-3.5 h-3.5 text-amber-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Comprar pixels</span>
+              <span className="hidden sm:inline text-amber-300 font-semibold">• R$ 1/px</span>
+            </button>
           </div>
         </div>
 
-        {/* Links de navegação e Chamada */}
-        <div className="pointer-events-auto flex items-center gap-1.5 bg-white border border-stone-300 shadow-md px-2 py-1.5 rounded-2xl text-xs font-bold text-stone-950">
-          <a
-            href="/diario"
-            className="px-2.5 py-1 rounded-xl hover:bg-stone-100 hover:text-purple-950 transition"
-          >
-            Diário
-          </a>
-          <a
-            href="/time"
-            className="px-2.5 py-1 rounded-xl hover:bg-stone-100 hover:text-purple-950 transition"
-          >
-            Time
-          </a>
-          <button
-            onClick={() => setPurchaseModalOpen(true)}
-            className="hidden sm:inline-flex items-center px-3 py-1 rounded-xl bg-purple-900 hover:bg-purple-800 text-white font-bold transition shadow-sm text-xs"
-          >
-            Garantir Bloco
-          </button>
+        {/* Linha de Prova Social & Progresso Real Rumo a 1 Milhão */}
+        <div className="flex items-center gap-2 self-start flex-wrap">
+          <div className="pointer-events-auto bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm px-3 py-1.5 rounded-xl flex flex-col gap-1 text-[11px] min-w-[210px] sm:min-w-[270px]">
+            <div className="flex items-center justify-between gap-3 text-stone-800 font-semibold leading-tight">
+              <span>
+                <strong className="text-stone-950 font-bold">{soldPixelsFormatted}</strong> / 1.000.000 vendidos ({soldPercentage})
+              </span>
+              <span className="text-emerald-700 font-bold">
+                {availablePixelsFormatted} livres
+              </span>
+            </div>
+            {/* Barra de progresso visual rumo a 1 milhão */}
+            <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden" title={`${soldPixelsFormatted} de 1.000.000 pixels vendidos`}>
+              <div
+                className="bg-purple-800 h-1.5 rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min(100, Math.max(soldPixels > 0 ? 0.8 : 0, (soldPixels / totalPixels) * 100))}%`,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Legenda compacta dos 4 estados */}
+          <div className="pointer-events-none hidden lg:flex items-center gap-2.5 bg-white/95 backdrop-blur-sm border border-stone-300 shadow-sm px-3 py-1.5 rounded-xl text-[11px] text-stone-800 font-semibold">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm bg-white border border-stone-400" />
+              <span>Livre</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
+              <span>Publicado</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 border border-amber-600" />
+              <span>Em análise</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm bg-purple-400 border border-purple-600 border-dashed" />
+              <span>Reservado</span>
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* LEGENDA COMPACTA DOS 4 ESTADOS */}
-      <div className="absolute top-16 left-3 sm:top-20 sm:left-6 pointer-events-none z-10 hidden sm:flex items-center gap-2.5 bg-white/95 backdrop-blur-sm border border-stone-300 shadow-sm px-3 py-1.5 rounded-xl text-[11px] text-stone-800 font-semibold">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-white border border-stone-400" />
-          <span>Livre</span>
+      {/* BANNER COMPACTO DE BOAS-VINDAS NA PRIMEIRA VISITA */}
+      {showWelcome && (
+        <div className="absolute top-28 sm:top-24 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-lg z-30 pointer-events-auto animate-in fade-in slide-in-from-top-3 duration-200">
+          <div className="bg-white/98 backdrop-blur-md border-2 border-purple-900/20 shadow-xl rounded-2xl p-3.5 sm:p-4 text-stone-900">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-xl bg-purple-100 border border-purple-200 text-purple-900 flex items-center justify-center shrink-0 font-bold text-base">
+                  🚀
+                </div>
+                <div>
+                  <h2 className="text-xs sm:text-sm font-extrabold text-stone-950 leading-tight">
+                    Bem-vindo ao Manda Pixel
+                  </h2>
+                  <p className="text-[11px] sm:text-xs text-stone-700 leading-relaxed mt-1">
+                    1.000.000 de pixels a R$ 1 cada. Arraste pelo mural, escolha um espaço livre no centro e publique sua imagem com link para sempre.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={dismissWelcome}
+                className="text-stone-500 hover:text-stone-900 font-bold text-sm p-1 rounded-lg hover:bg-stone-100 transition leading-none shrink-0"
+                aria-label="Fechar mensagem de boas-vindas"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mt-3 flex items-center justify-end gap-2 pt-2 border-t border-stone-200">
+              <button
+                onClick={dismissWelcome}
+                className="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold transition"
+              >
+                Fechar
+              </button>
+              <button
+                onClick={() => {
+                  handleResetCenter();
+                  dismissWelcome();
+                }}
+                className="px-3.5 py-1.5 rounded-xl bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold transition shadow-sm flex items-center gap-1.5"
+              >
+                <span>Escolher espaço no centro</span>
+                <span className="text-amber-300 font-extrabold">→</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
-          <span>Publicado</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 border border-amber-600" />
-          <span>Em análise</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-purple-400 border border-purple-600 border-dashed" />
-          <span>Reservado</span>
-        </div>
-      </div>
+      )}
 
       {/* TOOLTIP FLUTUANTE DE HOVER NO CANVAS */}
       {hoveredBlock && (
@@ -933,7 +1105,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
       {/* BARRA INFERIOR / HUD & CONTROLES */}
       <div className="absolute bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-6 pointer-events-none z-20 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2.5">
         {/* HUD DO BLOCO SELECIONADO & COORDENADAS COM CHAMADA PRINCIPAL DE COMPRA */}
-        <div className="pointer-events-auto bg-white border border-stone-300 shadow-md rounded-2xl p-2.5 sm:px-4 sm:py-3 flex items-center justify-between gap-3">
+        <div className="pointer-events-auto bg-white/95 backdrop-blur-md border border-stone-300 shadow-md rounded-2xl p-2.5 sm:px-4 sm:py-3 flex items-center justify-between gap-3">
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5 text-xs">
               <span className="inline-block w-2.5 h-2.5 rounded-full bg-purple-800 shrink-0" />
@@ -955,13 +1127,13 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
             onClick={() => setPurchaseModalOpen(true)}
             className="shrink-0 px-3.5 py-2 rounded-xl bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold shadow transition active:scale-95 flex items-center gap-1.5"
           >
-            <span>Comprar Bloco</span>
-            <span className="text-amber-300 font-extrabold">• R$ 25</span>
+            <span>Comprar pixels</span>
+            <span className="text-amber-300 font-extrabold">• R$ 1/px</span>
           </button>
         </div>
 
         {/* CONTROLES DE ZOOM E BOTÃO VOLTAR AO CENTRO */}
-        <div className="pointer-events-auto self-end sm:self-auto bg-white border border-stone-300 shadow-md rounded-2xl p-1.5 flex items-center gap-1.5">
+        <div className="pointer-events-auto self-end sm:self-auto bg-white/95 backdrop-blur-md border border-stone-300 shadow-md rounded-2xl p-1.5 flex items-center gap-1.5">
           {/* Botão Voltar ao Centro */}
           <button
             onClick={handleResetCenter}
@@ -1010,48 +1182,49 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
 
       {/* MODAL / DRAWER DE COMPRA DO BLOCO SELECIONADO */}
       {purchaseModalOpen && (
-        <div className="absolute inset-0 z-40 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="absolute inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-stone-200 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <img src="/logo.svg" alt="Manda Pixel Logo" className="w-6 h-6" />
-                <h3 className="font-bold text-stone-900 text-base">Garantir Bloco de Pixels</h3>
+                <h3 className="font-extrabold text-stone-950 text-base">Comprar pixels • R$ 1/px</h3>
               </div>
               <button
                 onClick={() => setPurchaseModalOpen(false)}
-                className="text-stone-400 hover:text-stone-700 text-lg font-bold p-1 leading-none"
+                className="text-stone-500 hover:text-stone-900 text-lg font-bold p-1 leading-none"
+                aria-label="Fechar"
               >
                 ✕
               </button>
             </div>
 
-            <div className="p-3.5 bg-stone-50 rounded-2xl border border-stone-100 text-xs space-y-2">
-              <div className="flex justify-between text-stone-600">
+            <div className="p-3.5 bg-stone-50 rounded-2xl border border-stone-200 text-xs space-y-2">
+              <div className="flex justify-between text-stone-700">
                 <span>Coordenadas:</span>
-                <strong className="font-mono text-stone-900">
+                <strong className="font-mono text-stone-950">
                   X: {selectedBlock?.x ?? 500}, Y: {selectedBlock?.y ?? 500}
                 </strong>
               </div>
-              <div className="flex justify-between text-stone-600">
+              <div className="flex justify-between text-stone-700">
                 <span>Tamanho do bloco:</span>
-                <strong className="text-stone-900">5×5 pixels (25 pixels)</strong>
+                <strong className="text-stone-950">5×5 pixels (25 pixels)</strong>
               </div>
-              <div className="flex justify-between text-stone-600 border-t border-stone-200 pt-2 font-bold">
+              <div className="flex justify-between text-stone-700 border-t border-stone-200 pt-2 font-bold">
                 <span>Total a pagar:</span>
-                <span className="text-purple-900 text-sm">R$ 25,00 via Pix</span>
+                <span className="text-purple-950 text-sm font-extrabold">R$ 25,00 via Pix</span>
               </div>
             </div>
 
-            <p className="text-[11px] text-stone-500 leading-relaxed">
-              Cada pixel custa R$ 1,00. O fluxo completo de compra e personalização do bloco com link e imagem será ativado nas próximas etapas.
+            <p className="text-[11px] text-stone-600 leading-relaxed">
+              Cada pixel custa R$ 1,00. Seu espaço fica registrado para sempre na grade de 1.000.000 de pixels com imagem e link direto.
             </p>
 
             <div className="flex gap-2 pt-1">
               <button
                 onClick={() => setPurchaseModalOpen(false)}
-                className="flex-1 py-2 rounded-xl border border-stone-200 text-stone-700 text-xs font-semibold hover:bg-stone-50 transition"
+                className="flex-1 py-2 rounded-xl border border-stone-300 text-stone-800 text-xs font-semibold hover:bg-stone-50 transition"
               >
-                Continuar Navegando
+                Continuar navegando
               </button>
               <button
                 onClick={() => {
@@ -1060,7 +1233,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
                 }}
                 className="flex-1 py-2 rounded-xl bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold transition shadow"
               >
-                Confirmar Bloco
+                Confirmar bloco
               </button>
             </div>
           </div>

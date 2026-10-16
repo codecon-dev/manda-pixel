@@ -25,6 +25,10 @@ export interface GridStats {
   reservedPixels: number;
   availablePixels: number;
   occupiedBlocksCount: number;
+  centerTotalPixels?: number;
+  centerSoldPixels?: number;
+  centerReservedPixels?: number;
+  centerAvailablePixels?: number;
 }
 
 export interface GridResponse {

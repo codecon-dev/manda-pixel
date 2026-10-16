@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import BuyPanelCrop from './BuyPanelCrop';
 import { validateAdInput, ModerationResult } from '../lib/moderation';
+import { trackCheckoutIniciado } from '../lib/analytics';
 
 export interface BuyPanelProps {
   isOpen: boolean;
@@ -31,7 +32,8 @@ export default function BuyPanel({
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
-  const [readySuccess, setReadySuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const pixels = selection.w * selection.h;
   const price = pixels;
@@ -50,29 +52,73 @@ export default function BuyPanel({
     onPreviewChange(dataUrl);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched(true);
-    if (!moderation.valid || !croppedImage) return;
+    setErrorMessage(null);
+    if (!moderation.valid || !croppedImage || isSubmitting) return;
 
-    if (onSubmit) {
-      onSubmit({
-        selection,
-        title: title.trim(),
-        linkUrl: linkUrl.trim(),
-        imageDataUrl: croppedImage,
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          x: selection.x,
+          y: selection.y,
+          w: selection.w,
+          h: selection.h,
+          title: title.trim(),
+          link: linkUrl.trim(),
+          imageDataUrl: croppedImage,
+        }),
       });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 409) {
+          setErrorMessage(data.error || 'A área selecionada já está ocupada ou reservada.');
+        } else if (res.status === 502) {
+          setErrorMessage(data.error || 'Sistema de pagamento indisponível no momento. Tente de novo em instantes.');
+        } else {
+          setErrorMessage(data.error || 'Erro ao processar reserva. Verifique as informações e tente novamente.');
+        }
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Sucesso na criação da reserva: dispara checkout_iniciado
+      trackCheckoutIniciado({
+        orderId: data.orderId,
+        pixels: data.pixels,
+        value: data.value,
+      });
+
+      if (onSubmit) {
+        onSubmit({
+          selection,
+          title: title.trim(),
+          linkUrl: linkUrl.trim(),
+          imageDataUrl: croppedImage,
+        });
+      }
+
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
+    } catch {
+      setErrorMessage('Erro de rede ao conectar com o servidor. Tente novamente.');
+      setIsSubmitting(false);
     }
-    setReadySuccess(true);
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex sm:justify-end justify-center items-end sm:items-stretch">
-      <div
-        className="w-full sm:w-[420px] max-h-[90vh] sm:max-h-screen bg-white shadow-2xl flex flex-col rounded-t-3xl sm:rounded-none sm:border-l border-stone-200 overflow-hidden animate-in slide-in-from-bottom sm:slide-in-from-right duration-200"
-      >
+      <div className="w-full sm:w-[420px] max-h-[90vh] sm:max-h-screen bg-white shadow-2xl flex flex-col rounded-t-3xl sm:rounded-none sm:border-l border-stone-200 overflow-hidden animate-in slide-in-from-bottom sm:slide-in-from-right duration-200">
         {/* Cabecalho */}
         <div className="p-4 sm:p-5 border-b border-stone-200 flex items-center justify-between bg-stone-50">
           <div>
@@ -219,6 +265,13 @@ export default function BuyPanel({
             )}
           </div>
 
+          {/* Mensagem de Erro do Servidor */}
+          {errorMessage && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-[11px] font-medium leading-relaxed">
+              {errorMessage}
+            </div>
+          )}
+
           {/* Status de Moderacao Instantanea */}
           {touched && moderation.moderationReason && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-[11px] font-medium">
@@ -226,19 +279,16 @@ export default function BuyPanel({
             </div>
           )}
 
-          {readySuccess && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-[11px] font-medium">
-              Dados validados com sucesso. Pronto para a etapa de pagamento Pix.
-            </div>
-          )}
-
           {/* Botao de Continuar */}
           <div className="pt-2">
             <button
               type="submit"
+              disabled={isSubmitting}
               className="w-full py-3 rounded-2xl bg-purple-900 hover:bg-purple-800 text-white font-bold text-xs shadow-md transition disabled:opacity-50"
             >
-              Continuar para pagamento (R$ {price.toLocaleString('pt-BR')},00)
+              {isSubmitting
+                ? 'Reservando pixels...'
+                : `Continuar para pagamento (R$ ${price.toLocaleString('pt-BR')},00)`}
             </button>
           </div>
         </form>

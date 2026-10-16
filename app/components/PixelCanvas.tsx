@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { GridBlock, GridStats } from '../lib/db';
 import BuyPanel from './BuyPanel';
+import { trackBlocoSelecionado, trackCheckoutRetorno } from '../lib/analytics';
 
 interface Point {
   x: number;
@@ -238,6 +239,41 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
   // Banner compacto de boas-vindas na primeira visita
   const [showWelcome, setShowWelcome] = useState<boolean>(false);
   const showWelcomeRef = useRef<boolean>(false);
+
+  // Retorno de checkout cancelado ou expirado via query params
+  const [returnBanner, setReturnBanner] = useState<{
+    type: 'cancelado' | 'expirado';
+    message: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('order');
+    const cancelado = params.get('cancelado');
+    const expirado = params.get('expirado');
+
+    if (orderId && (cancelado === '1' || expirado === '1')) {
+      const motivo: 'cancelado' | 'expirado' = cancelado === '1' ? 'cancelado' : 'expirado';
+      const message =
+        motivo === 'cancelado'
+          ? 'Seu pagamento foi cancelado. A área selecionada foi liberada na grade.'
+          : 'O tempo limite da reserva expirou. A área selecionada foi liberada na grade.';
+
+      setReturnBanner({ type: motivo, message });
+
+      trackCheckoutRetorno({
+        orderId,
+        resultado: motivo,
+      });
+
+      fetch(`/api/orders/${orderId}?${motivo}=1`, { cache: 'no-store' })
+        .then(() => {
+          if (onRefresh) onRefresh();
+        })
+        .catch(() => {});
+    }
+  }, [onRefresh]);
 
   const dismissWelcome = useCallback(() => {
     setShowWelcome(false);
@@ -1380,6 +1416,17 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
     }
   }, []);
 
+  const handleOpenBuyPanel = useCallback(() => {
+    if (selectedAreaRef.current) {
+      trackBlocoSelecionado({
+        pixels: selectedAreaRef.current.w * selectedAreaRef.current.h,
+        x: selectedAreaRef.current.x,
+        y: selectedAreaRef.current.y,
+      });
+    }
+    setBuyPanelOpen(true);
+  }, []);
+
   // Ação principal: Botão CTA "Comprar pixels"
   const handleCtaBuyPixels = useCallback(() => {
     if (!selectedAreaRef.current) {
@@ -1389,9 +1436,9 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
       const centerY = freeArea.y + freeArea.h / 2;
       smoothAnimateTo(centerX, centerY, 2.4, 450);
     } else {
-      setBuyPanelOpen(true);
+      handleOpenBuyPanel();
     }
-  }, [smoothAnimateTo]);
+  }, [smoothAnimateTo, handleOpenBuyPanel]);
 
   // Zoom pelo mouse wheel focado no cursor
   const handleWheel = useCallback(
@@ -1711,6 +1758,25 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
         </div>
       )}
 
+      {/* AVISO DE RETORNO DO CHECKOUT (CANCELADO OU EXPIRADO) */}
+      {returnBanner && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto max-w-md w-[calc(100%-2rem)] px-4 py-3 rounded-2xl bg-stone-900/95 backdrop-blur-md text-white border border-stone-700 shadow-2xl flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="flex flex-col gap-0.5">
+            <span className="font-bold text-amber-400">
+              {returnBanner.type === 'cancelado' ? 'Pagamento cancelado' : 'Reserva expirada'}
+            </span>
+            <span className="text-stone-300 text-[11px] leading-snug">{returnBanner.message}</span>
+          </div>
+          <button
+            onClick={() => setReturnBanner(null)}
+            className="text-stone-400 hover:text-white font-bold p-1.5 rounded-lg shrink-0"
+            aria-label="Fechar aviso"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* BARRA INFERIOR / HUD & CONTROLES */}
       <div className="absolute bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-6 pointer-events-none z-20 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2.5">
         {selectedArea ? (
@@ -1829,7 +1895,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
                 Cancelar
               </button>
               <button
-                onClick={() => setBuyPanelOpen(true)}
+                onClick={handleOpenBuyPanel}
                 className="flex-1 py-2 px-3 rounded-xl bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold transition shadow-md active:scale-[0.98] flex items-center justify-center gap-1.5"
               >
                 <span>Continuar com este espaço</span>

@@ -102,8 +102,10 @@ def main():
     draw.text((chip_x + 22, chip_y + 10), url, font=font_url, fill=DEEP)
 
     out = os.path.join(os.path.dirname(__file__), "..", "public", "og-image.png")
-    img.save(os.path.abspath(out), "PNG")
-    print(f"wrote {os.path.abspath(out)} ({W}x{H})")
+    out = os.path.abspath(out)
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    img.save(out, "PNG")
+    print(f"wrote {out} ({W}x{H})")
 
 
 if __name__ == "__main__":

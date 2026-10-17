@@ -10,3 +10,6 @@ export const SMOOTH_MIN_SCALE = 4;
 
 // Lado máximo, em px de tela, da imagem ampliada no card do anúncio
 export const AD_CARD_IMAGE_MAX = 160;
+
+// URL pública do site (metadataBase, robots, sitemap)
+export const SITE_URL = process.env.PUBLIC_URL ?? "https://mandapixel.com.br";

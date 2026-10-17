@@ -7,6 +7,7 @@ import {
   createReservedAd,
 } from '@/app/lib/db';
 import { validateAdInput } from '@/app/lib/moderation';
+import { validateAdPng } from '@/app/lib/upload-validation';
 import type { CreateOrderInput, CreateOrderResponse } from '@/types/orders';
 
 export const dynamic = 'force-dynamic';
@@ -55,6 +56,16 @@ export async function POST(request: NextRequest) {
         { error: 'Tamanho em pixels fora do limite permitido (25 a 1.000.000).' },
         { status: 400 }
       );
+    }
+
+    if (typeof imageDataUrl !== 'string') {
+      return NextResponse.json({ error: 'Imagem do anúncio inválida.' }, { status: 400 });
+    }
+    const base64Data = imageDataUrl.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    const imageError = validateAdPng(buffer);
+    if (imageError) {
+      return NextResponse.json({ error: imageError }, { status: 400 });
     }
 
     // Moderação instantânea
@@ -112,8 +123,6 @@ export async function POST(request: NextRequest) {
     const uploadsDir = path.join(dataDir, 'uploads');
     fs.mkdirSync(uploadsDir, { recursive: true });
 
-    const base64Data = imageDataUrl.replace(/^data:image\/\w+;base64,/, '');
-    const buffer = Buffer.from(base64Data, 'base64');
     const imageFilePath = path.join(uploadsDir, `${orderId}.png`);
     fs.writeFileSync(imageFilePath, buffer);
 

@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { GridBlock, GridStats } from '../lib/db';
 import BuyPanel from './BuyPanel';
+import AdTooltip, { type AdTooltipTarget } from './AdTooltip';
+import { SMOOTH_MIN_SCALE } from '../lib/constants.ts';
 import { trackBlocoSelecionado, trackCheckoutRetorno } from '../lib/analytics';
 
 interface Point {
@@ -167,11 +169,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
   });
 
   // Bloco sob o cursor (hover) para exibir tooltip
-  const [hoveredBlock, setHoveredBlock] = useState<{
-    block: GridBlock;
-    screenX: number;
-    screenY: number;
-  } | null>(null);
+  const [hoveredBlock, setHoveredBlock] = useState<AdTooltipTarget | null>(null);
+
+  // Card do anúncio aberto pelo primeiro toque (mobile não tem hover)
+  const [touchCard, setTouchCard] = useState<AdTooltipTarget | null>(null);
 
   // Célula livre sob o cursor para feedback de snap
   const [hoveredFreeCell, setHoveredFreeCell] = useState<{
@@ -479,6 +480,9 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
         // Bloco Publicado com imagem
         const img = block.imageUrl ? imageCache.get(block.imageUrl) : null;
         if (img && img.complete && img.naturalWidth > 0) {
+          // Imagem nova (grande) fica suave; anúncio antigo de 1 px por pixel fica nítido
+          ctx.imageSmoothingEnabled = img.naturalWidth >= block.w * SMOOTH_MIN_SCALE;
+          ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, bScreen.x, bScreen.y, bW, bH);
         } else {
           // Fallback elegante enquanto a imagem carrega
@@ -669,6 +673,8 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
       // Preview da imagem do anuncio recortada ou preenchimento padrao
       const previewImg = previewImageRef.current;
       if (previewImg && previewImg.complete) {
+        ctx.imageSmoothingEnabled = previewImg.naturalWidth >= selectedArea.w * SMOOTH_MIN_SCALE;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(previewImg, bScreen.x, bScreen.y, bW, bH);
       } else {
         ctx.fillStyle = 'rgba(106, 51, 120, 0.22)';
@@ -1252,6 +1258,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
 
     // Se foi apenas um clique sem arrastar
     if (pointerDistanceTraveledRef.current < 6) {
+      setTouchCard(null);
       const worldPoint = screenToWorld(e.clientX, e.clientY);
       const blockX = Math.floor(worldPoint.x / BLOCK_SIZE) * BLOCK_SIZE;
       const blockY = Math.floor(worldPoint.y / BLOCK_SIZE) * BLOCK_SIZE;
@@ -1267,7 +1274,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
         );
 
         if (clickedBlock) {
-          if (clickedBlock.state === 'published' && clickedBlock.linkUrl) {
+          if (clickedBlock.state === 'published' && e.pointerType === 'touch') {
+            // Toque: primeiro mostra o card com a imagem ampliada e o botão "Visitar site"
+            setTouchCard({ block: clickedBlock, screenX: e.clientX, screenY: e.clientY });
+          } else if (clickedBlock.state === 'published' && clickedBlock.linkUrl) {
             window.open(clickedBlock.linkUrl, '_blank', 'noopener,noreferrer');
           } else if (clickedBlock.state === 'in_review') {
             setNotification({
@@ -1723,51 +1733,18 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
         </div>
       )}
 
-      {/* TOOLTIP FLUTUANTE DE HOVER NO CANVAS */}
-      {hoveredBlock && (
-        <div
-          className="pointer-events-none fixed z-30 max-w-xs -translate-x-1/2 -translate-y-full mb-3 px-3 py-2 bg-stone-950 text-white text-xs rounded-xl shadow-xl border border-stone-700 animate-in fade-in zoom-in-95"
-          style={{
-            left: `${hoveredBlock.screenX}px`,
-            top: `${hoveredBlock.screenY - 8}px`,
-          }}
-        >
-          {hoveredBlock.block.state === 'published' && (
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5 font-bold text-amber-300">
-                <span>{hoveredBlock.block.altText || 'Anúncio publicado'}</span>
-                {hoveredBlock.block.xHandle && (
-                  <span className="text-stone-400 font-normal">
-                    @{hoveredBlock.block.xHandle.replace(/^@/, '')}
-                  </span>
-                )}
-              </div>
-              {hoveredBlock.block.linkUrl && (
-                <div className="text-[11px] text-stone-300 flex items-center gap-1">
-                  <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                  <span className="truncate">{formatDomain(hoveredBlock.block.linkUrl)}</span>
-                  <span className="text-[10px] text-stone-400">• Clique para abrir</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {hoveredBlock.block.state === 'in_review' && (
-            <div className="flex items-center gap-1.5 text-amber-300 font-bold">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              <span>Vendido • Em análise</span>
-            </div>
-          )}
-
-          {hoveredBlock.block.state === 'reserved' && (
-            <div className="flex items-center gap-1.5 text-purple-300 font-bold">
-              <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-              <span>Reservado (aguardando pagamento)</span>
-            </div>
-          )}
-        </div>
+      {/* TOOLTIP DE HOVER (MOUSE) OU CARD FIXO ABERTO POR TOQUE */}
+      {touchCard ? (
+        <AdTooltip
+          {...touchCard}
+          domain={formatDomain(touchCard.block.linkUrl)}
+          pinned
+          onClose={() => setTouchCard(null)}
+        />
+      ) : (
+        hoveredBlock && (
+          <AdTooltip {...hoveredBlock} domain={formatDomain(hoveredBlock.block.linkUrl)} />
+        )
       )}
 
       {/* FEEDBACK DE SNAP FLUTUANTE QUANDO SOBRE CÉLULA LIVRE */}

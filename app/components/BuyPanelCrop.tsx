@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { cropScale } from '../lib/crop-scale.ts';
 
 interface BuyPanelCropProps {
   targetW: number;
@@ -25,11 +26,14 @@ export default function BuyPanelCrop({
 
   const generateCrop = useCallback(
     (img: HTMLImageElement, zoom: number, offX: number, offY: number, tw: number, th: number) => {
+      // Guarda S px de imagem por pixel do bloco para o anúncio não ficar borrado ao ampliar
+      const S = cropScale(tw, th);
       const canvas = document.createElement('canvas');
-      canvas.width = tw;
-      canvas.height = th;
+      canvas.width = tw * S;
+      canvas.height = th * S;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
+      ctx.scale(S, S);
 
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';

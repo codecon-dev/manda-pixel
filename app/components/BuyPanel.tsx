@@ -118,7 +118,7 @@ export default function BuyPanel({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex sm:justify-end justify-center items-end sm:items-stretch">
-      <div className="w-full sm:w-[420px] max-h-[90vh] sm:max-h-screen bg-white shadow-2xl flex flex-col rounded-t-3xl sm:rounded-none sm:border-l border-stone-200 overflow-hidden animate-in slide-in-from-bottom sm:slide-in-from-right duration-200">
+      <div className="w-full sm:w-[420px] max-h-[90dvh] sm:max-h-dvh bg-white shadow-2xl flex flex-col rounded-t-3xl sm:rounded-none sm:border-l border-stone-200 overflow-hidden animate-in slide-in-from-bottom sm:slide-in-from-right duration-200">
         {/* Cabecalho */}
         <div className="p-4 sm:p-5 border-b border-stone-200 flex items-center justify-between bg-stone-50">
           <div>

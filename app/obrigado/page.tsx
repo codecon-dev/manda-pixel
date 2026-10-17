@@ -317,7 +317,7 @@ function ObrigadoContent() {
 
 export default function ObrigadoPage() {
   return (
-    <main className="min-h-screen bg-stone-100 flex flex-col items-center justify-center p-4 py-8">
+    <main className="min-h-dvh bg-stone-100 flex flex-col items-center justify-center p-4 py-8">
       <div className="w-full max-w-md flex flex-col items-center gap-6">
         <Suspense
           fallback={

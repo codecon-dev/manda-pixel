@@ -39,7 +39,7 @@ export default function Home() {
   }, [fetchGrid]);
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-stone-100">
+    <main className="relative w-full h-dvh overflow-hidden bg-stone-100">
       <PixelCanvas blocks={blocks} stats={stats} onRefresh={fetchGrid} />
     </main>
   );

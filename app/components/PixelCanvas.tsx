@@ -1536,7 +1536,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
               <span className="font-extrabold text-stone-950 tracking-tight text-xs sm:text-sm leading-none">
                 Manda Pixel
               </span>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-stone-950 leading-none">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-stone-950 leading-none whitespace-nowrap shrink-0">
                 R$ 1/px
               </span>
             </div>
@@ -1545,7 +1545,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
 
             {/* Pílula de presença ao vivo */}
             <div
-              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-950 text-[11px] font-semibold"
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-950 text-[11px] font-semibold whitespace-nowrap shrink-0"
               title={`${onlineCount} pessoas conectadas agora`}
             >
               <span className="relative flex h-2 w-2 shrink-0">
@@ -1586,7 +1586,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
             </a>
             <button
               onClick={handleCtaBuyPixels}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-900 hover:bg-purple-800 text-white font-bold transition shadow-sm text-xs active:scale-95"
+              className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-purple-900 hover:bg-purple-800 text-white font-bold transition shadow-sm text-xs active:scale-95 whitespace-nowrap shrink-0"
             >
               <svg className="w-3.5 h-3.5 text-amber-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
@@ -1667,7 +1667,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
 
       {/* BANNER COMPACTO DE BOAS-VINDAS NA PRIMEIRA VISITA */}
       {showWelcome && (
-        <div className="absolute top-28 sm:top-24 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-lg z-30 pointer-events-auto animate-in fade-in slide-in-from-top-3 duration-200">
+        <div className="absolute top-40 sm:top-24 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-lg z-30 pointer-events-auto animate-in fade-in slide-in-from-top-3 duration-200">
           <div className="bg-white/98 backdrop-blur-md border-2 border-purple-900/20 shadow-xl rounded-2xl p-3.5 sm:p-4 text-stone-900">
             <div className="flex items-start justify-between gap-3">
               <div className="flex gap-3">
@@ -1823,7 +1823,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
       )}
 
       {/* BARRA INFERIOR / HUD & CONTROLES */}
-      <div className="absolute bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-6 pointer-events-none z-20 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2.5">
+      <div className="absolute bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-6 pb-[env(safe-area-inset-bottom)] pointer-events-none z-20 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-3 sm:gap-2.5">
         {selectedArea ? (
           /* PAINEL FLUTUANTE DA SELEÇÃO ATIVA */
           <div className="pointer-events-auto bg-white/98 backdrop-blur-md border-2 border-purple-900/25 shadow-2xl rounded-2xl p-3 sm:p-3.5 max-w-xl w-full flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
@@ -1854,15 +1854,15 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
             {/* Linha Intermediária: Presets rápidos e Steppers */}
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-stone-200">
               {/* Presets */}
-              <div className="flex items-center gap-1 flex-wrap">
-                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mr-0.5">Tamanhos:</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mr-0.5 whitespace-nowrap">Tamanhos:</span>
                 {PRESETS.map((p) => {
                   const isActive = selectedArea.w === p.w && selectedArea.h === p.h;
                   return (
                     <button
                       key={p.label}
                       onClick={() => applyPreset(p.w, p.h)}
-                      className={`px-2 py-1 rounded-lg text-xs font-bold transition active:scale-95 ${
+                      className={`px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition active:scale-95 ${
                         isActive
                           ? 'bg-purple-900 text-white shadow-sm'
                           : 'bg-stone-100 hover:bg-stone-200 text-stone-800'

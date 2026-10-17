@@ -339,6 +339,14 @@ export default function ObrigadoPage() {
             Time
           </a>
           <span className="text-stone-300">•</span>
+          <a href="/termos" className="hover:text-purple-950 transition font-medium">
+            Termos
+          </a>
+          <span className="text-stone-300">•</span>
+          <a href="/privacidade" className="hover:text-purple-950 transition font-medium">
+            Privacidade
+          </a>
+          <span className="text-stone-300">•</span>
           <a
             href="https://github.com/codecon-dev/manda-pixel"
             target="_blank"

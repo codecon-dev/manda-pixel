@@ -290,6 +290,13 @@ export default function BuyPanel({
                 ? 'Reservando pixels...'
                 : `Continuar para pagamento (R$ ${price.toLocaleString('pt-BR')},00)`}
             </button>
+            <p className="mt-2 text-center text-[11px] text-stone-600">
+              Ao comprar você aceita os{' '}
+              <a href="/termos" target="_blank" rel="noopener" className="font-semibold text-purple-900 underline underline-offset-2">
+                Termos
+              </a>
+              .
+            </p>
           </div>
         </form>
       </div>

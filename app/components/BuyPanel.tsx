@@ -123,7 +123,7 @@ export default function BuyPanel({
         <div className="p-4 sm:p-5 border-b border-stone-200 flex items-center justify-between bg-stone-50">
           <div>
             <h2 className="text-base font-extrabold text-stone-900">Comprar Pixels</h2>
-            <p className="text-xs text-stone-500 font-medium">Configure seu anuncio na grade</p>
+            <p className="text-xs text-stone-500 font-medium">Configure seu anúncio na grade</p>
           </div>
           <button
             onClick={onClose}
@@ -139,7 +139,7 @@ export default function BuyPanel({
           {/* Card de Coordenadas e Ajuste de Tamanho */}
           <div className="p-3.5 bg-stone-50 rounded-2xl border border-stone-200 space-y-3">
             <div className="flex justify-between items-center text-stone-700">
-              <span>Posicao no mapa:</span>
+              <span>Posição no mapa:</span>
               <span className="font-mono font-bold text-stone-900">
                 X: {selection.x}, Y: {selection.y}
               </span>
@@ -211,7 +211,7 @@ export default function BuyPanel({
           <div className="space-y-1">
             <div className="flex justify-between items-center">
               <label htmlFor="ad-title" className="font-bold text-stone-900">
-                Titulo do anuncio (texto do tooltip)
+                Título do anúncio (texto do tooltip)
               </label>
               <span className="text-[11px] text-stone-400 font-mono">{title.length}/80</span>
             </div>

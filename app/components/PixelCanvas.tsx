@@ -811,6 +811,17 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
     }
   }, [screenToWorld, worldToScreen, selectedArea, hoveredFreeCell, cursorCoord.inside, blocks]);
 
+  // Ref estável para efeitos que não devem re-executar quando renderCanvas muda (hover/seleção)
+  const renderCanvasRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    renderCanvasRef.current = renderCanvas;
+  }, [renderCanvas]);
+
+  // Redesenha sempre que o estado visual (hover, seleção, blocos) muda
+  useEffect(() => {
+    renderCanvas();
+  }, [renderCanvas]);
+
   // Atualiza preview de recorte no bloco selecionado quando o usuário envia imagem
   useEffect(() => {
     if (!previewDataUrl) {
@@ -885,8 +896,8 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    renderCanvas();
-  }, [renderCanvas]);
+    renderCanvasRef.current();
+  }, []);
 
   useEffect(() => {
     handleResize();
@@ -901,9 +912,9 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
       const initialZoom = w < 640 ? 0.95 : 1.2;
       cameraRef.current = { x: 500, y: 500, zoom: initialZoom };
       setZoomDisplay(Math.round(initialZoom * 100));
-      renderCanvas();
+      renderCanvasRef.current();
     }
-  }, [renderCanvas]);
+  }, []); // só na montagem
 
   // Transição suave para um ponto e zoom
   const smoothAnimateTo = useCallback(

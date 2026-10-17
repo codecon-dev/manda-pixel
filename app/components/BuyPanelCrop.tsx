@@ -72,7 +72,7 @@ export default function BuyPanelCrop({
     if (!file) return;
 
     if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-      setFileError('Formato invalido. Envie imagem PNG, JPG ou WebP.');
+      setFileError('Formato inválido. Envie imagem PNG, JPG ou WebP.');
       return;
     }
 
@@ -106,7 +106,7 @@ export default function BuyPanelCrop({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <label className="block text-xs font-bold text-stone-900">
-          Imagem do anuncio ({targetW}x{targetH} px)
+          Imagem do anúncio ({targetW}x{targetH} px)
         </label>
         {imgObj && (
           <button
@@ -134,7 +134,7 @@ export default function BuyPanelCrop({
           <div className="text-stone-700 text-xs font-semibold">
             Clique para selecionar PNG, JPG ou WebP
           </div>
-          <div className="text-stone-400 text-[11px] mt-1">Ate 5MB. Sera recortada na proporcao {targetW}:{targetH}.</div>
+          <div className="text-stone-400 text-[11px] mt-1">Até 5MB. Será recortada na proporção {targetW}:{targetH}.</div>
         </div>
       ) : (
         <div className="bg-stone-50 p-3 rounded-2xl border border-stone-200 space-y-3">

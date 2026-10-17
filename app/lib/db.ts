@@ -212,7 +212,8 @@ export function syncOrderStatusWithGateway(
   }
 
   if (gatewayOrder.status === 'expired' || gatewayOrder.status === 'refunded') {
-    db.prepare(`UPDATE ads SET status = ? WHERE order_id = ?`).run(gatewayOrder.status, orderId);
+    db.prepare(`UPDATE ads SET status = ?, moderation_status = CASE WHEN ? = 'refunded' THEN 'refunded' ELSE moderation_status END WHERE order_id = ?`)
+      .run(gatewayOrder.status, gatewayOrder.status, orderId);
     return getAdByOrderId(orderId);
   }
 

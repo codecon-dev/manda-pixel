@@ -34,3 +34,43 @@ export interface OrderSyncResponse {
   order: GatewayOrder;
   ad: AdRecord | null;
 }
+
+export interface ModerationQueueItem {
+  orderId: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  pixels: number;
+  title: string;
+  link: string;
+  imageUrl?: string;
+  status: string;
+  moderationStatus: string;
+  moderationDecision?: string | null;
+  moderationReason?: string | null;
+  createdAt: string;
+  paidAt?: string | null;
+  expiresAt?: string | null;
+}
+
+export interface ModerationListResponse {
+  items: ModerationQueueItem[];
+  stats: {
+    inReviewCount: number;
+    publishedCount: number;
+    rejectedCount: number;
+  };
+  syncedAt: string;
+}
+
+export interface ModerationActionInput {
+  orderId: string;
+  action: 'approve' | 'reject';
+  reason?: string;
+}
+
+export interface ModerationActionResponse {
+  success: boolean;
+  item: ModerationQueueItem;
+}

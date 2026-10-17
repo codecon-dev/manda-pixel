@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getGridState } from '@/app/lib/db';
+import { syncGatewayOrders } from '@/app/lib/gateway-sync';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    // Sincroniza em segundo plano / com throttle curto sem travar a resposta
+    await syncGatewayOrders().catch(() => {});
+
     const data = getGridState();
     return NextResponse.json(data, {
       status: 200,
@@ -13,7 +17,6 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Erro ao buscar estado da grade:', error);
     return NextResponse.json(
       {
         blocks: [],

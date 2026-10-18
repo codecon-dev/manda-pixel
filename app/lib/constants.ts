@@ -13,3 +13,11 @@ export const AD_CARD_IMAGE_MAX = 160;
 
 // URL pública do site (metadataBase, robots, sitemap)
 export const SITE_URL = process.env.PUBLIC_URL ?? "https://mandapixel.com.br";
+
+// Produto: preço por pixel, total da grade e meta do experimento
+export const PIXEL_PRICE_BRL = 1;
+export const TOTAL_PIXELS = 1_000_000;
+export const GOAL_BRL = 1_000_000;
+
+// Presença: visitante some do "online" após este tempo sem heartbeat
+export const PRESENCE_TTL_MS = 60_000;

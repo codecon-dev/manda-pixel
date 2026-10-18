@@ -1,27 +1,5 @@
 import { NextResponse } from 'next/server';
-
-declare global {
-  // eslint-disable-next-line no-var
-  var __mandapixel_presence: Map<string, number> | undefined;
-}
-
-function getPresenceMap(): Map<string, number> {
-  if (!global.__mandapixel_presence) {
-    global.__mandapixel_presence = new Map<string, number>();
-  }
-  return global.__mandapixel_presence;
-}
-
-function cleanExpiredPresence(ttlMs = 60_000): Map<string, number> {
-  const map = getPresenceMap();
-  const now = Date.now();
-  map.forEach((lastSeen, id) => {
-    if (now - lastSeen > ttlMs) {
-      map.delete(id);
-    }
-  });
-  return map;
-}
+import { cleanExpiredPresence } from '@/app/lib/presence';
 
 export const dynamic = 'force-dynamic';
 

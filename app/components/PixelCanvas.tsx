@@ -1593,6 +1593,12 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
             >
               Time
             </a>
+            <a
+              href="/painel"
+              className="hidden md:inline-flex px-2.5 py-1 text-xs font-bold text-stone-800 hover:text-purple-950 rounded-xl hover:bg-stone-100 transition"
+            >
+              Painel
+            </a>
             <button
               onClick={handleCtaBuyPixels}
               className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-purple-900 hover:bg-purple-800 text-white font-bold transition shadow-sm text-xs active:scale-95 whitespace-nowrap shrink-0"
@@ -1677,6 +1683,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
             <span className="text-stone-300 md:hidden">•</span>
             <a href="/time" className="md:hidden hover:text-purple-950 transition">
               Time
+            </a>
+            <span className="text-stone-300 md:hidden">•</span>
+            <a href="/painel" className="md:hidden hover:text-purple-950 transition">
+              Painel
             </a>
           </div>
         </div>

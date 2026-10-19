@@ -5,6 +5,7 @@ import { GridBlock, GridStats } from '../lib/db';
 import BuyPanel from './BuyPanel';
 import AdTooltip, { type AdTooltipTarget } from './AdTooltip';
 import { SMOOTH_MIN_SCALE } from '../lib/constants.ts';
+import { selectionStartFromCamera } from '../lib/selection-start.ts';
 import { trackBlocoSelecionado, trackCheckoutRetorno } from '../lib/analytics';
 
 interface Point {
@@ -182,13 +183,8 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
     screenY: number;
   } | null>(null);
 
-  // Área selecionada pelo usuário (inicia no centro 500, 500 com bloco 10x10 livre)
-  const [selectedArea, setSelectedArea] = useState<SelectedArea | null>({
-    x: 500,
-    y: 500,
-    w: 10,
-    h: 10,
-  });
+  // Área selecionada pelo usuário (inicia vazia: nada cobre a grade até o visitante agir)
+  const [selectedArea, setSelectedArea] = useState<SelectedArea | null>(null);
 
   const selectedAreaRef = useRef<SelectedArea | null>(selectedArea);
   useEffect(() => {
@@ -1451,7 +1447,8 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
   // Ação principal: Botão CTA "Comprar pixels"
   const handleCtaBuyPixels = useCallback(() => {
     if (!selectedAreaRef.current) {
-      const freeArea = findFreeBlockNear(500, 500, 10, 10, blocksRef.current);
+      const start = selectionStartFromCamera(cameraRef.current, 10, 10);
+      const freeArea = findFreeBlockNear(start.x, start.y, 10, 10, blocksRef.current);
       setSelectedArea(freeArea);
       const centerX = freeArea.x + freeArea.w / 2;
       const centerY = freeArea.y + freeArea.h / 2;

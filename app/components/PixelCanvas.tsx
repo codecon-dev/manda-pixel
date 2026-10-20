@@ -1691,7 +1691,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
 
       {/* BANNER COMPACTO DE BOAS-VINDAS NA PRIMEIRA VISITA */}
       {showWelcome && (
-        <div className="absolute top-40 sm:top-24 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-lg z-30 pointer-events-auto animate-in fade-in slide-in-from-top-3 duration-200">
+        <div className="absolute top-48 sm:top-24 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-lg z-30 pointer-events-auto animate-in fade-in slide-in-from-top-3 duration-200">
           <div className="bg-white/98 backdrop-blur-md border-2 border-purple-900/20 shadow-xl rounded-2xl p-3.5 sm:p-4 text-stone-900">
             <div className="flex items-start justify-between gap-3">
               <div className="flex gap-3">
@@ -1945,12 +1945,12 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
           /* HUD QUANDO NÃO HÁ SELEÇÃO ATIVA */
           <div className="pointer-events-auto bg-white/95 backdrop-blur-md border border-stone-300 shadow-md rounded-2xl p-2.5 sm:px-4 sm:py-3 flex items-center justify-between gap-3">
             <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-1.5 text-xs">
+              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 min-w-0 text-xs">
                 <span className="inline-block w-2.5 h-2.5 rounded-full bg-stone-400 shrink-0" />
-                <span className="font-extrabold text-stone-950 truncate">
+                <span className="font-extrabold text-stone-950 whitespace-nowrap shrink-0">
                   {cursorCoord.inside ? `Posição X: ${cursorCoord.x}, Y: ${cursorCoord.y}` : 'Fora da Grade'}
                 </span>
-                <span className="text-xs text-stone-600 font-semibold">5×5 px mín.</span>
+                <span className="text-[10px] sm:text-xs text-stone-600 font-semibold whitespace-nowrap shrink-0">5×5 px mín.</span>
               </div>
               <span className="text-xs text-stone-700 mt-0.5">
                 Toque na grade ou clique em <strong>Comprar pixels</strong>

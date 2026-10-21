@@ -1,6 +1,8 @@
 import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
+import { LIVE_AD_SQL, isValidPublicAdId } from './ad-rules.ts';
+import type { PublicAd } from '../../types/ads.ts';
 
 export type GridBlockState = 'published' | 'in_review' | 'reserved';
 
@@ -183,6 +185,46 @@ export function getAdByOrderId(orderId: string): AdRecord | null {
   const db = getDb();
   const row = db.prepare(`SELECT * FROM ads WHERE order_id = ?`).get(orderId);
   return (row as unknown as AdRecord) || null;
+}
+
+type PublicAdRow = Pick<
+  AdRecord,
+  'order_id' | 'x' | 'y' | 'w' | 'h' | 'pixels' | 'image_path' | 'link_url' | 'alt_text' | 'x_handle' | 'paid_at'
+>;
+
+/** Anuncio no ar com seu numero (#1, #2...). null se o id for invalido ou o anuncio nao estiver no ar. */
+export function getPublicAdById(id: string): PublicAd | null {
+  if (typeof id !== 'string' || !isValidPublicAdId(id)) return null;
+  const db = getDb();
+  const row = db.prepare(`
+    SELECT order_id, x, y, w, h, pixels, image_path, link_url, alt_text, x_handle, paid_at
+    FROM ads WHERE order_id = ? AND ${LIVE_AD_SQL}
+  `).get(id) as unknown as PublicAdRow | undefined;
+  if (!row) return null;
+
+  const paidAt = row.paid_at ?? '';
+  const before = db.prepare(`
+    SELECT COUNT(*) AS n FROM ads
+    WHERE ${LIVE_AD_SQL}
+      AND (COALESCE(paid_at, '') < ? OR (COALESCE(paid_at, '') = ? AND order_id < ?))
+  `).get(paidAt, paidAt, row.order_id) as unknown as { n: number };
+
+  return {
+    orderId: row.order_id, x: row.x, y: row.y, w: row.w, h: row.h, pixels: row.pixels,
+    imagePath: normalizeImageUrl(row.image_path) ?? null, linkUrl: row.link_url ?? null,
+    altText: row.alt_text ?? null, xHandle: row.x_handle ?? null, paidAt: row.paid_at ?? null,
+    number: 1 + Number(before.n),
+  };
+}
+
+/** Ids dos anuncios no ar com id publico valido, para o sitemap. */
+export function listLiveAdIds(): { orderId: string; paidAt: string | null }[] {
+  const rows = getDb()
+    .prepare(`SELECT order_id, paid_at FROM ads WHERE ${LIVE_AD_SQL} ORDER BY paid_at ASC, order_id ASC`)
+    .all() as unknown as Pick<AdRecord, 'order_id' | 'paid_at'>[];
+  return rows
+    .filter((r) => isValidPublicAdId(r.order_id))
+    .map((r) => ({ orderId: r.order_id, paidAt: r.paid_at ?? null }));
 }
 
 export function syncOrderStatusWithGateway(

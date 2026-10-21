@@ -4,7 +4,8 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { GridBlock, GridStats } from '../lib/db';
 import BuyPanel from './BuyPanel';
 import AdTooltip, { type AdTooltipTarget } from './AdTooltip';
-import { SMOOTH_MIN_SCALE } from '../lib/constants.ts';
+import { FOCUS_ZOOM, SMOOTH_MIN_SCALE } from '../lib/constants.ts';
+import type { GridFocus } from '@/types/ads';
 import { selectionStartFromCamera } from '../lib/selection-start.ts';
 import { trackBlocoSelecionado, trackCheckoutRetorno } from '../lib/analytics';
 
@@ -145,18 +146,22 @@ interface PixelCanvasProps {
   blocks?: GridBlock[];
   stats?: GridStats;
   onRefresh?: () => void;
+  /** Ponto para abrir a grade focada (vem de ?x=&y= na home). */
+  focus?: GridFocus;
 }
 
 const GRID_SIZE = 1000;
 const BLOCK_SIZE = 5; // Bloco mínimo de 5x5 pixels (R$ 1/pixel = R$ 25)
 const MAX_ZOOM = 24;
 
-export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanvasProps) {
+export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: PixelCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Câmera no espaço do mundo (coordenada central 500, 500)
-  const cameraRef = useRef<Camera>({ x: 500, y: 500, zoom: 1.2 });
+  // Câmera no espaço do mundo (coordenada central 500, 500, ou o foco da URL)
+  const cameraRef = useRef<Camera>(
+    focus ? { x: focus.x, y: focus.y, zoom: FOCUS_ZOOM } : { x: 500, y: 500, zoom: 1.2 }
+  );
   const [zoomDisplay, setZoomDisplay] = useState<number>(120);
 
   // Cache de imagens dos blocos publicados
@@ -905,8 +910,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh }: PixelCanv
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const w = window.innerWidth;
-      const initialZoom = w < 640 ? 0.95 : 1.2;
-      cameraRef.current = { x: 500, y: 500, zoom: initialZoom };
+      const initialZoom = focus ? FOCUS_ZOOM : w < 640 ? 0.95 : 1.2;
+      cameraRef.current = focus
+        ? { x: focus.x, y: focus.y, zoom: initialZoom }
+        : { x: 500, y: 500, zoom: initialZoom };
       setZoomDisplay(Math.round(initialZoom * 100));
       renderCanvasRef.current();
     }

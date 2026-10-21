@@ -1,20 +1,17 @@
 import { getDb } from './db.ts';
+import { isLiveRow } from './ad-rules.ts';
 import { GOAL_BRL, PIXEL_PRICE_BRL, TOTAL_PIXELS } from './constants.ts';
 import type { PainelAdRow, PainelStats } from '../../types/painel.ts';
+
+export { isLiveRow };
 
 /** Status de anuncio cujo pagamento entrou e continua valendo. */
 const PAID_STATUSES: ReadonlySet<string> = new Set(['paid', 'published', 'in_review']);
 /** Status de moderacao que tiram o anuncio da conta (recusado ou estornado). */
 const EXCLUDED_MODERATION: ReadonlySet<string> = new Set(['rejected', 'refunded']);
-/** Status que deixam o anuncio visivel na grade. */
-const LIVE_STATUSES: ReadonlySet<string> = new Set(['paid', 'published']);
 
 export function isPaidRow(row: PainelAdRow): boolean {
   return PAID_STATUSES.has(row.status) && !EXCLUDED_MODERATION.has(row.moderation_status);
-}
-
-export function isLiveRow(row: PainelAdRow): boolean {
-  return LIVE_STATUSES.has(row.status) && row.moderation_status === 'approved';
 }
 
 /** Calculo puro, sem banco: soma pixels pagos, receita, % da grade e anuncios no ar. */

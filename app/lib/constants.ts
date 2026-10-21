@@ -19,5 +19,13 @@ export const PIXEL_PRICE_BRL = 1;
 export const TOTAL_PIXELS = 1_000_000;
 export const GOAL_BRL = 1_000_000;
 
+// Home aberta focada num ponto (?x=&y=): zoom inicial e maior coordenada aceita
+export const FOCUS_ZOOM = 4;
+export const GRID_MAX_COORD = 999;
+
+// Página pública do anúncio: largura máxima da imagem e corte da descrição
+export const AD_PAGE_IMAGE_MAX = 480;
+export const AD_DESCRIPTION_MAX = 150;
+
 // Presença: visitante some do "online" após este tempo sem heartbeat
 export const PRESENCE_TTL_MS = 60_000;

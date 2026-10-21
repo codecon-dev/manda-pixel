@@ -8,6 +8,7 @@ import {
   trackAnuncioPublicado,
 } from '@/app/lib/analytics';
 import type { GatewayOrder, OrderSyncResponse } from '@/types/orders';
+import ShareAdLinks from '@/app/components/ShareAdLinks';
 
 function ObrigadoContent() {
   const searchParams = useSearchParams();
@@ -232,6 +233,7 @@ function ObrigadoContent() {
             >
               Ver meu anúncio na grade
             </Link>
+            <ShareAdLinks orderId={orderId} />
           </div>
         </div>
       )}

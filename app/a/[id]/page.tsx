@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getPublicAdById } from '@/app/lib/db';
 import { AD_DESCRIPTION_MAX, AD_PAGE_IMAGE_MAX, SITE_URL } from '@/app/lib/constants';
+import { adImageSize } from '@/app/lib/ad-image';
+import { integerScale } from '@/app/lib/png-upscale';
 import type { PublicAd } from '@/types/ads';
 
 export const dynamic = 'force-dynamic';
@@ -102,6 +104,8 @@ export default function AdPage({ params }: AdPageProps) {
   if (!ad) notFound();
   const focusX = Math.floor(ad.x + ad.w / 2);
   const focusY = Math.floor(ad.y + ad.h / 2);
+  const natural = adImageSize(ad.orderId, { width: ad.w, height: ad.h });
+  const scale = integerScale(natural.width, natural.height, AD_PAGE_IMAGE_MAX);
 
   return (
     <main className="min-h-dvh bg-[#6A3378] px-4 py-8 text-white sm:py-14">
@@ -116,10 +120,10 @@ export default function AdPage({ params }: AdPageProps) {
           <img
             src={ad.imagePath}
             alt={ad.altText ?? `Anúncio #${ad.number}`}
-            width={ad.w}
-            height={ad.h}
-            className="h-auto rounded-sm bg-white shadow-lg ring-4 ring-[#FCD953]"
-            style={{ width: `min(100%, ${AD_PAGE_IMAGE_MAX}px)`, imageRendering: 'pixelated' }}
+            width={natural.width * scale}
+            height={natural.height * scale}
+            className="h-auto max-w-full rounded-sm bg-white shadow-lg ring-4 ring-[#FCD953]"
+            style={{ imageRendering: 'pixelated' }}
           />
         )}
 

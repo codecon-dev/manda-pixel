@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import zlib from 'node:zlib';
-import { decodePng, encodePng, pngChunk, upscalePngNearest, UnsupportedPngError } from '../app/lib/png-upscale.ts';
+import { decodePng, encodePng, integerScale, pngChunk, pngSize, upscalePngNearest, UnsupportedPngError } from '../app/lib/png-upscale.ts';
 
 function checker(width: number, height: number): Buffer {
   const rgba = Buffer.alloc(width * height * 4);
@@ -50,4 +50,22 @@ test('imagem grande nao e ampliada e arquivo invalido lanca erro tipado', () => 
   const big = checker(300, 300);
   assert.equal(upscalePngNearest(big, 380), big);
   assert.throws(() => decodePng(Buffer.from('nao sou png')), UnsupportedPngError);
+});
+
+test('pngSize le o IHDR do PNG 25x25', () => {
+  assert.deepEqual(pngSize(checker(25, 25)), { width: 25, height: 25 });
+});
+
+test('upscale de 25px para caixa 380 sai exatamente 375x375 (fator inteiro 15)', () => {
+  assert.deepEqual(pngSize(upscalePngNearest(checker(25, 25), 380)), { width: 375, height: 375 });
+});
+
+test('pngSize lanca erro tipado se nao for PNG', () => {
+  assert.throws(() => pngSize(Buffer.from('nao sou png, mas tenho mais de 24 bytes')), UnsupportedPngError);
+});
+
+test('integerScale usa so fator inteiro e nunca menos que 1', () => {
+  assert.equal(integerScale(25, 25, 480), 19);
+  assert.equal(integerScale(500, 500, 480), 1);
+  assert.equal(integerScale(50, 25, 480), 9);
 });

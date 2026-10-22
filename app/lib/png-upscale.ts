@@ -101,6 +101,23 @@ export function encodePng({ width, height, rgba }: Decoded): Buffer {
   return Buffer.concat([PNG_SIGNATURE, pngChunk('IHDR', header), pngChunk('IDAT', zlib.deflateSync(raw)), pngChunk('IEND', Buffer.alloc(0))]);
 }
 
+const IHDR_WIDTH_OFFSET = 16;
+const IHDR_HEIGHT_OFFSET = 20;
+const IHDR_MIN_BYTES = 24;
+
+/** Tamanho real do PNG lido do IHDR, sem decodificar. Lanca UnsupportedPngError se nao for PNG. */
+export function pngSize(buf: Buffer): { width: number; height: number } {
+  if (buf.length < IHDR_MIN_BYTES || !buf.subarray(0, 8).equals(PNG_SIGNATURE) || buf.toString('ascii', 12, 16) !== 'IHDR') {
+    throw new UnsupportedPngError('nao e PNG (assinatura ou IHDR ausente)');
+  }
+  return { width: buf.readUInt32BE(IHDR_WIDTH_OFFSET), height: buf.readUInt32BE(IHDR_HEIGHT_OFFSET) };
+}
+
+/** Maior fator inteiro (minimo 1) para o maior lado caber em max. */
+export function integerScale(width: number, height: number, max: number): number {
+  return Math.max(1, Math.floor(max / Math.max(width, height, 1)));
+}
+
 /** Amplia por fator inteiro ate caber em maxSide. Fator < 2: devolve o arquivo original. */
 export function upscalePngNearest(file: Buffer, maxSide: number): Buffer {
   const src = decodePng(file);

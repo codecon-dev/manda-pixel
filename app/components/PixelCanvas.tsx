@@ -8,6 +8,7 @@ import { FOCUS_ZOOM, SMOOTH_MIN_SCALE } from '../lib/constants.ts';
 import type { GridFocus } from '@/types/ads';
 import { selectionStartFromCamera } from '../lib/selection-start.ts';
 import { trackBlocoSelecionado, trackCheckoutRetorno } from '../lib/analytics';
+import WelcomeCard from './WelcomeCard';
 
 interface Point {
   x: number;
@@ -1465,6 +1466,11 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
     }
   }, [smoothAnimateTo, handleOpenBuyPanel]);
 
+  const chooseSpaceFromWelcome = useCallback(() => {
+    handleCtaBuyPixels();
+    dismissWelcome();
+  }, [handleCtaBuyPixels, dismissWelcome]);
+
   // Zoom pelo mouse wheel focado no cursor
   const handleWheel = useCallback(
     (e: WheelEvent) => {
@@ -1555,18 +1561,18 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
       <header className="absolute top-3 inset-x-3 sm:top-4 sm:inset-x-6 pointer-events-none z-20 flex flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
           {/* Esquerda: Identidade Manda Pixel + Pílula de Presença ao Vivo */}
-          <div className="pointer-events-auto flex items-center gap-2 bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-2xl">
+          <div className="pointer-events-auto min-w-0 flex items-center gap-2 bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-2xl">
             <img src="/logo.svg" alt="Manda Pixel Logo" className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
-            <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-stone-950 tracking-tight text-xs sm:text-sm leading-none">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="truncate font-extrabold text-stone-950 tracking-tight text-xs sm:text-sm leading-none">
                 Manda Pixel
               </span>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-stone-950 leading-none whitespace-nowrap shrink-0">
+              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-stone-950 leading-none whitespace-nowrap shrink-0">
                 R$ 1/px
               </span>
             </div>
 
-            <div className="w-[1px] h-3.5 bg-stone-300 mx-0.5" />
+            <div className="hidden sm:block w-[1px] h-3.5 bg-stone-300 mx-0.5" />
 
             {/* Pílula de presença ao vivo */}
             <div
@@ -1584,7 +1590,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
           </div>
 
           {/* Direita: Links e Botão Principal "Comprar pixels" */}
-          <div className="pointer-events-auto flex items-center gap-1.5 bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm p-1.5 rounded-2xl">
+          <div className="pointer-events-auto shrink-0 flex items-center gap-1.5 bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm p-1.5 rounded-2xl">
             <a
               href="/diario"
               className="hidden md:inline-flex px-2.5 py-1 text-xs font-bold text-stone-800 hover:text-purple-950 rounded-xl hover:bg-stone-100 transition"
@@ -1672,87 +1678,36 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
               </svg>
               <span>Código aberto</span>
             </a>
-            <span className="text-stone-300">•</span>
+            <span className="text-stone-600">•</span>
             <a href="/termos" className="hover:text-purple-950 transition">
               Termos
             </a>
-            <span className="text-stone-300">•</span>
+            <span className="text-stone-600">•</span>
             <a href="/privacidade" className="hover:text-purple-950 transition">
               Privacidade
             </a>
-            <span className="text-stone-300 md:hidden">•</span>
+            <span className="text-stone-600 md:hidden">•</span>
             <a href="/diario" className="md:hidden hover:text-purple-950 transition">
               Diário
             </a>
-            <span className="text-stone-300 md:hidden">•</span>
+            <span className="text-stone-600 md:hidden">•</span>
             <a href="/time" className="md:hidden hover:text-purple-950 transition">
               Time
             </a>
-            <span className="text-stone-300 md:hidden">•</span>
+            <span className="text-stone-600 md:hidden">•</span>
             <a href="/painel" className="md:hidden hover:text-purple-950 transition">
               Painel
             </a>
           </div>
         </div>
-      </header>
 
-      {/* BANNER COMPACTO DE BOAS-VINDAS NA PRIMEIRA VISITA */}
-      {showWelcome && (
-        <div className="absolute top-48 sm:top-24 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-lg z-30 pointer-events-auto animate-in fade-in slide-in-from-top-3 duration-200">
-          <div className="bg-white/98 backdrop-blur-md border-2 border-purple-900/20 shadow-xl rounded-2xl p-3.5 sm:p-4 text-stone-900">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-xl bg-purple-100 border border-purple-200 text-purple-900 flex items-center justify-center shrink-0 font-bold text-base">
-                  🚀
-                </div>
-                <div>
-                  <h2 className="text-xs sm:text-sm font-extrabold text-stone-950 leading-tight">
-                    Bem-vindo ao Manda Pixel
-                  </h2>
-                  <p className="text-[11px] sm:text-xs text-stone-700 leading-relaxed mt-1">
-                    1.000.000 de pixels a R$ 1 cada. Arraste pelo mural, escolha um espaço livre no centro e publique sua imagem com link para sempre. Projeto com{' '}
-                    <a
-                      href="https://github.com/codecon-dev/manda-pixel"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-purple-900 font-semibold underline underline-offset-2 hover:text-purple-700"
-                    >
-                      código aberto no GitHub
-                    </a>
-                    .
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={dismissWelcome}
-                className="text-stone-500 hover:text-stone-900 font-bold text-sm p-1 rounded-lg hover:bg-stone-100 transition leading-none shrink-0"
-                aria-label="Fechar mensagem de boas-vindas"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-3 flex items-center justify-end gap-2 pt-2 border-t border-stone-200">
-              <button
-                onClick={dismissWelcome}
-                className="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold transition"
-              >
-                Fechar
-              </button>
-              <button
-                onClick={() => {
-                  handleCtaBuyPixels();
-                  dismissWelcome();
-                }}
-                className="px-3.5 py-1.5 rounded-xl bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold transition shadow-sm flex items-center gap-1.5"
-              >
-                <span>Escolher espaço no centro</span>
-                <span className="text-amber-300 font-extrabold">→</span>
-              </button>
-            </div>
+        {/* BOAS-VINDAS NO DESKTOP: NO FLUXO DO HEADER, SEMPRE ABAIXO DAS BARRAS */}
+        {showWelcome && (
+          <div className="hidden sm:block mt-1 pointer-events-auto self-start w-full max-w-md animate-in fade-in slide-in-from-top-3 duration-200">
+            <WelcomeCard onDismiss={dismissWelcome} onChooseSpace={chooseSpaceFromWelcome} />
           </div>
-        </div>
-      )}
+        )}
+      </header>
 
       {/* TOOLTIP DE HOVER (MOUSE) OU CARD FIXO ABERTO POR TOQUE */}
       {touchCard ? (
@@ -1822,6 +1777,12 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
 
       {/* BARRA INFERIOR / HUD & CONTROLES */}
       <div className="absolute bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-6 pb-[env(safe-area-inset-bottom)] pointer-events-none z-20 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-3 sm:gap-2.5">
+        {/* BOAS-VINDAS NO MOBILE: NO FLUXO DA BARRA INFERIOR, LOGO ACIMA DELA, CENTRO LIVRE */}
+        {showWelcome && (
+          <div className="sm:hidden pointer-events-auto max-h-[40dvh] overflow-y-auto animate-in fade-in slide-in-from-bottom-3 duration-200">
+            <WelcomeCard compact onDismiss={dismissWelcome} onChooseSpace={chooseSpaceFromWelcome} />
+          </div>
+        )}
         {selectedArea ? (
           /* PAINEL FLUTUANTE DA SELEÇÃO ATIVA */
           <div className="pointer-events-auto bg-white/98 backdrop-blur-md border-2 border-purple-900/25 shadow-2xl rounded-2xl p-3 sm:p-3.5 max-w-xl w-full flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
@@ -1841,7 +1802,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
               </div>
               <button
                 onClick={() => setSelectedArea(null)}
-                className="text-stone-400 hover:text-stone-900 p-1 rounded-lg hover:bg-stone-100 transition font-bold text-sm leading-none shrink-0"
+                className="text-stone-600 hover:text-stone-900 p-1 rounded-lg hover:bg-stone-100 transition font-bold text-sm leading-none shrink-0"
                 title="Cancelar seleção"
                 aria-label="Cancelar seleção"
               >
@@ -1853,7 +1814,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-stone-200">
               {/* Presets */}
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mr-0.5 whitespace-nowrap">Tamanhos:</span>
+                <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider mr-0.5 whitespace-nowrap">Tamanhos:</span>
                 {PRESETS.map((p) => {
                   const isActive = selectedArea.w === p.w && selectedArea.h === p.h;
                   return (
@@ -1867,7 +1828,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
                       }`}
                       title={`${p.label} pixels = R$ ${p.price}`}
                     >
-                      {p.label} <span className={isActive ? 'text-amber-300' : 'text-stone-500'}>• R$ {p.price}</span>
+                      {p.label} <span className={isActive ? 'text-amber-300' : 'text-stone-600'}>• R$ {p.price}</span>
                     </button>
                   );
                 })}
@@ -1957,7 +1918,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
                 <span className="font-extrabold text-stone-950 whitespace-nowrap shrink-0">
                   {cursorCoord.inside ? `Posição X: ${cursorCoord.x}, Y: ${cursorCoord.y}` : 'Fora da Grade'}
                 </span>
-                <span className="text-[10px] sm:text-xs text-stone-600 font-semibold whitespace-nowrap shrink-0">5×5 px mín.</span>
+                <span className="text-[11px] sm:text-xs text-stone-700 font-semibold whitespace-nowrap shrink-0">5×5 px mín.</span>
               </div>
               <span className="text-xs text-stone-700 mt-0.5">
                 Toque na grade ou clique em <strong>Comprar pixels</strong>

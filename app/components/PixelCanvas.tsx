@@ -7,6 +7,7 @@ import AdTooltip, { type AdTooltipTarget } from './AdTooltip';
 import { FOCUS_ZOOM, SMOOTH_MIN_SCALE } from '../lib/constants.ts';
 import type { GridFocus } from '@/types/ads';
 import { selectionStartFromCamera } from '../lib/selection-start.ts';
+import { fitCameraToAds } from '../lib/camera-fit.ts';
 import { trackBlocoSelecionado, trackCheckoutRetorno } from '../lib/analytics';
 import WelcomeCard from './WelcomeCard';
 
@@ -545,7 +546,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
     if (wLeft < wRight && wTop < wBottom) {
       // Linhas finas de 5 em 5 pixels (blocos mínimos de R$ 25)
       if (cam.zoom >= 1.2) {
-        const opacity = Math.min(0.18, (cam.zoom - 1.2) * 0.08);
+        const opacity = Math.min(0.08, (cam.zoom - 1.2) * 0.04);
         ctx.strokeStyle = `rgba(100, 116, 139, ${opacity.toFixed(3)})`;
         ctx.lineWidth = 1;
 
@@ -576,7 +577,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
 
       // Linhas de referência a cada 50 pixels
       if (cam.zoom >= 0.4) {
-        ctx.strokeStyle = 'rgba(106, 51, 120, 0.18)';
+        ctx.strokeStyle = 'rgba(106, 51, 120, 0.07)';
         ctx.lineWidth = 1;
 
         ctx.beginPath();
@@ -605,8 +606,8 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
       }
 
       // Linhas principais a cada 100 pixels
-      ctx.strokeStyle = 'rgba(106, 51, 120, 0.35)';
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = 'rgba(106, 51, 120, 0.12)';
+      ctx.lineWidth = 1;
 
       ctx.beginPath();
       const start100X = Math.floor(wLeft / 100) * 100;
@@ -635,8 +636,8 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
 
     // 3. EIXOS CENTRAIS (500, 500)
     const centerScreen = worldToScreen(500, 500, cam);
-    ctx.strokeStyle = 'rgba(106, 51, 120, 0.7)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(106, 51, 120, 0.2)';
+    ctx.lineWidth = 1;
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
     ctx.moveTo(centerScreen.x, Math.max(screenOrigin.y, 0));
@@ -645,15 +646,6 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
     ctx.lineTo(Math.min(screenOrigin.x + gridWidthPx, vp.width), centerScreen.y);
     ctx.stroke();
     ctx.setLineDash([]);
-
-    // Destaque do ponto central (500, 500)
-    ctx.beginPath();
-    ctx.arc(centerScreen.x, centerScreen.y, 7, 0, Math.PI * 2);
-    ctx.fillStyle = '#FCD953';
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#6A3378';
-    ctx.stroke();
 
     // 4. DESTAQUE DO SNAP 5×5 SOB O CURSOR (ESPAÇO LIVRE)
     if (hoveredFreeCell && cursorCoord.inside && !isDraggingRef.current) {
@@ -920,10 +912,27 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
     }
   }, []); // só na montagem
 
+  // Sem foco na URL: enquadra os anúncios no ar uma única vez, se o visitante ainda não mexeu na câmera
+  const initialFitDoneRef = useRef<boolean>(false);
+  const userMovedCameraRef = useRef<boolean>(false);
+  useEffect(() => {
+    if (focus || initialFitDoneRef.current || userMovedCameraRef.current) return;
+    const liveAds = blocks.filter((block) => block.state === 'published');
+    const vp = viewportRef.current;
+    if (vp.width === 0 || vp.height === 0) return;
+    const fit = fitCameraToAds(liveAds, vp, { minZoom: getMinZoom(), maxZoom: MAX_ZOOM });
+    if (!fit) return;
+    initialFitDoneRef.current = true;
+    cameraRef.current = fit;
+    setZoomDisplay(Math.round(fit.zoom * 100));
+    renderCanvasRef.current();
+  }, [blocks, focus, getMinZoom]);
+
   // Transição suave para um ponto e zoom
   const smoothAnimateTo = useCallback(
     (targetX: number, targetY: number, targetZoom: number, duration = 400) => {
       isTransitioningRef.current = true;
+      userMovedCameraRef.current = true;
       velocityRef.current = { vx: 0, vy: 0 };
 
       const startX = cameraRef.current.x;
@@ -999,12 +1008,14 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
         isDraggingRef.current = false;
       } else {
         interactionModeRef.current = 'pan';
+        userMovedCameraRef.current = true;
         isDraggingRef.current = true;
         dragStartCamRef.current = { x: cameraRef.current.x, y: cameraRef.current.y };
       }
     } else if (activePointersRef.current.size === 2) {
       // Inicia Pinch
       interactionModeRef.current = 'pinch';
+      userMovedCameraRef.current = true;
       isDraggingRef.current = false;
       const pts = Array.from(activePointersRef.current.values());
       const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
@@ -1475,6 +1486,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
   const handleWheel = useCallback(
     (e: WheelEvent) => {
       e.preventDefault();
+      userMovedCameraRef.current = true;
       const minZoom = getMinZoom();
       const cam = cameraRef.current;
       const vp = viewportRef.current;

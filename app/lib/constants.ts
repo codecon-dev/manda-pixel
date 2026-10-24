@@ -29,3 +29,8 @@ export const AD_DESCRIPTION_MAX = 150;
 
 // Presença: visitante some do "online" após este tempo sem heartbeat
 export const PRESENCE_TTL_MS = 60_000;
+
+// Home sem foco abre enquadrando os anúncios no ar: fração da tela, lado mínimo e zoom máximo
+export const FIT_VIEWPORT_FRACTION = 0.6;
+export const FIT_MIN_SIDE = 40;
+export const FIT_MAX_ZOOM = 12;

@@ -20,3 +20,18 @@ export type GridFocus = {
   x: number;
   y: number;
 };
+
+/** Retângulo de um anúncio na grade, em pixels do mundo. */
+export interface AdRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** Posição e zoom da câmera da grade. */
+export interface CameraView {
+  x: number;
+  y: number;
+  zoom: number;
+}

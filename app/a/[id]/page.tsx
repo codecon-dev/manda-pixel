@@ -6,6 +6,7 @@ import { AD_DESCRIPTION_MAX, AD_PAGE_IMAGE_MAX, SITE_URL } from '@/app/lib/const
 import { adImageSize } from '@/app/lib/ad-image';
 import { integerScale } from '@/app/lib/png-upscale';
 import type { PublicAd } from '@/types/ads';
+import ShareOnX from '@/app/components/ShareOnX';
 
 export const dynamic = 'force-dynamic';
 
@@ -129,6 +130,8 @@ export default function AdPage({ params }: AdPageProps) {
 
         {ad.altText && <p className="text-xl font-semibold text-pretty">{ad.altText}</p>}
         <AdLinks ad={ad} />
+        {/* getPublicAdById so devolve anuncio no ar (LIVE_AD_SQL, mesmo criterio de isLiveRow) */}
+        <ShareOnX adId={ad.orderId} pixels={ad.pixels} variant="visitante" className="self-start" />
         <AdDetails ad={ad} />
 
         <div className="flex flex-col gap-3 sm:flex-row">

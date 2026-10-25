@@ -9,6 +9,8 @@ import {
 } from '@/app/lib/analytics';
 import type { GatewayOrder, OrderSyncResponse } from '@/types/orders';
 import ShareAdLinks from '@/app/components/ShareAdLinks';
+import ShareOnX from '@/app/components/ShareOnX';
+import { SHAREABLE_ORDER_STATUSES } from '@/app/lib/share';
 
 function ObrigadoContent() {
   const searchParams = useSearchParams();
@@ -133,6 +135,7 @@ function ObrigadoContent() {
   const isRefunded = order?.status === 'refunded';
   const isPublished = ad?.status === 'published';
   const isInReview = ad?.status === 'in_review' || ad?.moderation_status === 'review' || ad?.moderation_decision === 'review';
+  const canShare = order !== null && SHAREABLE_ORDER_STATUSES.has(order.status);
 
   return (
     <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 shadow-sm max-w-lg w-full space-y-6">
@@ -233,7 +236,7 @@ function ObrigadoContent() {
             >
               Ver meu anúncio na grade
             </Link>
-            <ShareAdLinks orderId={orderId} />
+            {canShare && <ShareAdLinks orderId={orderId} pixels={order.pixels} />}
           </div>
         </div>
       )}
@@ -261,6 +264,8 @@ function ObrigadoContent() {
               <span className="font-bold text-purple-900">Em análise</span>
             </div>
           </div>
+
+          {canShare && <ShareOnX adId={orderId} pixels={order.pixels} variant="comprador" className="w-full" />}
 
           <div className="pt-2">
             <Link

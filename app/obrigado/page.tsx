@@ -91,7 +91,7 @@ function ObrigadoContent() {
     return (
       <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 shadow-sm text-center max-w-md w-full">
         <h1 className="text-lg font-extrabold text-stone-900 mb-2">Pedido não informado</h1>
-        <p className="text-xs text-stone-500 mb-6 leading-relaxed">
+        <p className="text-xs text-stone-700 mb-6 leading-relaxed">
           Nenhum identificador de pedido foi encontrado nesta página.
         </p>
         <Link
@@ -337,23 +337,23 @@ export default function ObrigadoPage() {
           <ObrigadoContent />
         </Suspense>
 
-        <footer className="text-center text-xs text-stone-500 flex items-center justify-center gap-3 flex-wrap">
+        <footer className="text-center text-xs text-stone-700 flex items-center justify-center gap-x-3 gap-y-2 flex-wrap">
           <a href="/diario" className="hover:text-purple-950 transition font-medium">
             Diário
           </a>
-          <span className="text-stone-300">•</span>
+          <span className="hidden text-stone-500 sm:inline" aria-hidden="true">•</span>
           <a href="/time" className="hover:text-purple-950 transition font-medium">
             Time
           </a>
-          <span className="text-stone-300">•</span>
+          <span className="hidden text-stone-500 sm:inline" aria-hidden="true">•</span>
           <a href="/termos" className="hover:text-purple-950 transition font-medium">
             Termos
           </a>
-          <span className="text-stone-300">•</span>
+          <span className="hidden text-stone-500 sm:inline" aria-hidden="true">•</span>
           <a href="/privacidade" className="hover:text-purple-950 transition font-medium">
             Privacidade
           </a>
-          <span className="text-stone-300">•</span>
+          <span className="hidden text-stone-500 sm:inline" aria-hidden="true">•</span>
           <a
             href="https://github.com/codecon-dev/manda-pixel"
             target="_blank"

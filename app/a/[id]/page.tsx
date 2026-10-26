@@ -7,6 +7,7 @@ import { adImageSize } from '@/app/lib/ad-image';
 import { integerScale } from '@/app/lib/png-upscale';
 import type { PublicAd } from '@/types/ads';
 import ShareOnX from '@/app/components/ShareOnX';
+import BadgeEmbed from '@/app/components/BadgeEmbed';
 
 export const dynamic = 'force-dynamic';
 
@@ -132,6 +133,13 @@ export default function AdPage({ params }: AdPageProps) {
         <AdLinks ad={ad} />
         {/* getPublicAdById so devolve anuncio no ar (LIVE_AD_SQL, mesmo criterio de isLiveRow) */}
         <ShareOnX adId={ad.orderId} pixels={ad.pixels} variant="visitante" className="self-start" />
+        <section aria-labelledby="badge-title" className="flex flex-col gap-3 border-t border-white/20 pt-5">
+          <h2 id="badge-title" className="text-xl font-bold text-balance">Tem site? Coloque o selo</h2>
+          <p className="text-sm text-white/90 text-pretty">
+            Cole o código no seu site e quem clicar chega direto neste anúncio.
+          </p>
+          <BadgeEmbed adId={ad.orderId} />
+        </section>
         <AdDetails ad={ad} />
 
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -148,7 +156,7 @@ export default function AdPage({ params }: AdPageProps) {
             Compre o seu pedaço
           </Link>
         </div>
-        <p className="text-sm text-white/70 text-pretty">
+        <p className="text-sm text-white/90 text-pretty">
           1 milhão de pixels a R$ 1 cada, em blocos a partir de 5×5. Quem compra fica na grade.
         </p>
       </article>

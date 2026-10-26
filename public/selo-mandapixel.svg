@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="40" viewBox="0 0 180 40" role="img" aria-label="Estou no Manda Pixel">
+  <rect width="180" height="40" rx="6" fill="#6A3378"/>
+  <g fill="#FCD953">
+    <rect x="10" y="10" width="6" height="6"/>
+    <rect x="22" y="10" width="6" height="6"/>
+    <rect x="16" y="16" width="6" height="6"/>
+    <rect x="10" y="22" width="6" height="6"/>
+    <rect x="22" y="22" width="6" height="6"/>
+  </g>
+  <rect x="16" y="10" width="6" height="6" fill="#FFFFFF"/>
+  <rect x="16" y="22" width="6" height="6" fill="#FFFFFF"/>
+  <text x="38" y="25.5" fill="#FCD953" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif" font-size="14" font-weight="700">Estou no Manda Pixel</text>
+</svg>

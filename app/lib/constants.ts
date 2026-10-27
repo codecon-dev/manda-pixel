@@ -34,3 +34,7 @@ export const PRESENCE_TTL_MS = 60_000;
 export const FIT_VIEWPORT_FRACTION = 0.6;
 export const FIT_MIN_SIDE = 40;
 export const FIT_MAX_ZOOM = 12;
+
+// Experimento: data de início (horário de São Paulo) e duração em dias
+export const EXPERIMENT_START = "2026-11-01";
+export const EXPERIMENT_DAYS = 365;

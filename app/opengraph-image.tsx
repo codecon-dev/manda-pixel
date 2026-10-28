@@ -37,6 +37,7 @@ function startLabel(): string {
 function footerText(now: Date): string {
   const status = experimentStatus(now);
   if (!status.started) return `O experimento começa em ${startLabel()}`;
+  if (status.ended) return 'Experimento encerrado';
   return `Dia ${status.day} de ${EXPERIMENT_DAYS}`;
 }
 

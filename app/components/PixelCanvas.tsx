@@ -10,6 +10,7 @@ import { selectionStartFromCamera } from '../lib/selection-start.ts';
 import { fitCameraToAds } from '../lib/camera-fit.ts';
 import { trackBlocoSelecionado, trackCheckoutRetorno } from '../lib/analytics';
 import WelcomeCard from './WelcomeCard';
+import ExperimentDay from './ExperimentDay';
 
 interface Point {
   x: number;
@@ -1654,6 +1655,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
                 }}
               />
             </div>
+            <ExperimentDay />
           </div>
 
           {/* Legenda compacta dos 4 estados */}

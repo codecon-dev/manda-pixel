@@ -35,7 +35,7 @@ export default function ExperimentDay() {
   return (
     <a
       href="/diario"
-      className="block h-3.5 whitespace-nowrap text-[10px] leading-[14px] font-bold text-stone-800 hover:text-purple-900 hover:underline focus-visible:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-purple-800 rounded-sm underline-offset-2"
+      className="block h-3.5 whitespace-nowrap text-[11px] leading-[15px] font-bold text-stone-800 hover:text-purple-900 hover:underline focus-visible:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-purple-800 rounded-sm underline-offset-2"
     >
       {statusText(status)}
     </a>

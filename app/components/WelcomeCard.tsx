@@ -10,7 +10,7 @@ type WelcomeCardProps = {
 
 export default function WelcomeCard({ onDismiss, onChooseSpace, compact = false }: WelcomeCardProps) {
   const padding = compact ? 'p-3' : 'p-4';
-  const titleSize = compact ? 'text-base' : 'text-sm';
+  const titleSize = compact ? 'text-lg' : 'text-base';
   const bodySize = compact ? 'text-sm leading-snug' : 'text-xs leading-relaxed';
   const noteSize = compact ? 'text-xs leading-snug' : 'text-[11px] leading-snug';
   const footerSpacing = compact ? 'mt-2 pt-1.5' : 'mt-3 pt-2';
@@ -24,7 +24,7 @@ export default function WelcomeCard({ onDismiss, onChooseSpace, compact = false 
             🚀
           </div>
           <div>
-            <h2 className={`${titleSize} font-extrabold text-stone-950 leading-tight text-balance`}>
+            <h2 className={`${titleSize} font-pixel text-stone-950 leading-tight text-balance`}>
               Bem-vindo ao Manda Pixel
             </h2>
             <p className={`${bodySize} text-stone-700 mt-1 text-pretty`}>

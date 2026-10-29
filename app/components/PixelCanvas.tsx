@@ -1577,7 +1577,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
           <div className="pointer-events-auto min-w-0 flex items-center gap-2 bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-2xl">
             <img src="/logo.svg" alt="Manda Pixel Logo" className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="truncate font-extrabold text-stone-950 tracking-tight text-xs sm:text-sm leading-none">
+              <span className="truncate font-pixel text-stone-950 text-sm sm:text-base leading-none">
                 Manda Pixel
               </span>
               <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-stone-950 leading-none whitespace-nowrap shrink-0">
@@ -1598,7 +1598,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
               </span>
               <span className="font-bold text-emerald-950">{onlineCount}</span>
               <span className="text-emerald-900 hidden sm:inline">explorando agora</span>
-              <span className="text-emerald-900 sm:hidden">online</span>
+              <span className="sr-only sm:hidden">online</span>
             </div>
           </div>
 
@@ -1640,9 +1640,9 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
           <div className="pointer-events-auto bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm px-3 py-1.5 rounded-xl flex flex-col gap-1 text-[11px] min-w-[210px] sm:min-w-[270px]">
             <div className="flex items-center justify-between gap-3 text-stone-800 font-semibold leading-tight">
               <span>
-                <strong className="text-stone-950 font-bold">{soldPixelsFormatted}</strong> / 1.000.000 vendidos ({soldPercentage})
+                <strong className="text-stone-950 font-bold tabular-nums">{soldPixelsFormatted}</strong> / 1.000.000 vendidos ({soldPercentage})
               </span>
-              <span className="text-emerald-700 font-bold">
+              <span className="text-emerald-700 font-bold tabular-nums">
                 {availablePixelsFormatted} livres
               </span>
             </div>
@@ -1925,7 +1925,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
           </div>
         ) : (
           /* HUD QUANDO NÃO HÁ SELEÇÃO ATIVA */
-          <div className="pointer-events-auto bg-white/95 backdrop-blur-md border border-stone-300 shadow-md rounded-2xl p-2.5 sm:px-4 sm:py-3 flex items-center justify-between gap-3">
+          <div className="pointer-events-auto bg-white/95 backdrop-blur-md border border-stone-300 shadow-md rounded-2xl p-2.5 sm:px-4 sm:py-3 flex items-center justify-between gap-3 tabular-nums">
             <div className="flex flex-col min-w-0">
               <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 min-w-0 text-xs">
                 <span className="inline-block w-2.5 h-2.5 rounded-full bg-stone-400 shrink-0" />

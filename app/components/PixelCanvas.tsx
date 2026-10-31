@@ -1659,27 +1659,27 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
           </div>
 
           {/* Legenda compacta dos 4 estados */}
-          <div className="pointer-events-none hidden lg:flex items-center gap-2.5 bg-white/95 backdrop-blur-sm border border-stone-300 shadow-sm px-3 py-1.5 rounded-xl text-[11px] text-stone-800 font-semibold">
-            <div className="flex items-center gap-1.5">
+          <div className="pointer-events-none order-last lg:order-none flex flex-nowrap justify-center whitespace-nowrap items-center gap-2 lg:gap-2.5 bg-white/95 backdrop-blur-sm border border-stone-300 shadow-sm px-2 py-1 lg:px-3 lg:py-1.5 rounded-xl text-[10px] lg:text-[11px] text-stone-800 font-semibold">
+            <div className="flex items-center gap-1 lg:gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-white border border-stone-400" />
               <span>Livre</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 lg:gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
               <span>Publicado</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 lg:gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 border border-amber-600" />
               <span>Em análise</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 lg:gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-purple-400 border border-purple-600 border-dashed" />
               <span>Reservado</span>
             </div>
           </div>
 
           {/* Pílula de Código Aberto & Links institucionais */}
-          <div className="pointer-events-auto max-w-full flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm px-2 py-1.5 rounded-xl text-[11px] font-bold text-stone-800">
+          <div className="pointer-events-auto max-w-full w-full sm:w-auto flex flex-nowrap sm:flex-wrap items-center justify-between gap-x-0.5 sm:justify-center sm:gap-x-1.5 gap-y-0.5 bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm px-2.5 sm:px-2 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-bold text-stone-800">
             <a
               href="https://github.com/codecon-dev/manda-pixel"
               target="_blank"
@@ -1687,28 +1687,28 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
               title="Ver código aberto no GitHub"
               className="inline-flex items-center gap-1.5 whitespace-nowrap hover:text-purple-950 transition"
             >
-              <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="hidden min-[380px]:block w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
               </svg>
               <span className="whitespace-nowrap">Código aberto</span>
             </a>
-            <span className="text-stone-600">•</span>
+            <span className="hidden sm:inline text-stone-600">•</span>
             <a href="/termos" className="whitespace-nowrap hover:text-purple-950 transition">
               Termos
             </a>
-            <span className="text-stone-600">•</span>
+            <span className="hidden sm:inline text-stone-600">•</span>
             <a href="/privacidade" className="whitespace-nowrap hover:text-purple-950 transition">
               Privacidade
             </a>
-            <span className="text-stone-600 md:hidden">•</span>
+            <span className="hidden sm:inline text-stone-600 md:hidden">•</span>
             <a href="/diario" className="md:hidden whitespace-nowrap hover:text-purple-950 transition">
               Diário
             </a>
-            <span className="text-stone-600 md:hidden">•</span>
+            <span className="hidden sm:inline text-stone-600 md:hidden">•</span>
             <a href="/time" className="md:hidden whitespace-nowrap hover:text-purple-950 transition">
               Time
             </a>
-            <span className="text-stone-600 md:hidden">•</span>
+            <span className="hidden sm:inline text-stone-600 md:hidden">•</span>
             <a href="/painel" className="md:hidden whitespace-nowrap hover:text-purple-950 transition">
               Painel
             </a>

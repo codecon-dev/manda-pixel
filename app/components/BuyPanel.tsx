@@ -193,7 +193,7 @@ export default function BuyPanel({
 
             <div className="pt-2 border-t border-stone-200 flex justify-between items-baseline">
               <span className="text-stone-600 font-medium">{pixels.toLocaleString('pt-BR')} pixels</span>
-              <span className="text-purple-900 font-extrabold text-sm">
+              <span className="text-brand-purple font-extrabold text-sm">
                 R$ {price.toLocaleString('pt-BR')},00
               </span>
             </div>
@@ -254,7 +254,7 @@ export default function BuyPanel({
                 type="checkbox"
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
-                className="mt-0.5 rounded text-purple-800 focus:ring-purple-700"
+                className="mt-0.5 rounded text-brand-purple focus:ring-purple-700"
               />
               <span className="text-[11px] text-stone-600 leading-snug">
                 Concordo com os termos. Proibido conteudo adulto, apostas, cripto, politica partidaria ou conteudo ilegal.
@@ -284,7 +284,7 @@ export default function BuyPanel({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 rounded-2xl bg-purple-900 hover:bg-purple-800 text-white font-bold text-xs shadow-md transition disabled:opacity-50"
+              className="w-full py-3 rounded-2xl bg-brand-purple hover:bg-brand-purpleDark text-white font-bold text-xs shadow-md transition disabled:opacity-50"
             >
               {isSubmitting
                 ? 'Reservando pixels...'
@@ -292,7 +292,7 @@ export default function BuyPanel({
             </button>
             <p className="mt-2 text-center text-[11px] text-stone-600">
               Ao comprar você aceita os{' '}
-              <a href="/termos" target="_blank" rel="noopener" className="font-semibold text-purple-900 underline underline-offset-2">
+              <a href="/termos" target="_blank" rel="noopener" className="font-semibold text-brand-purple underline underline-offset-2">
                 Termos
               </a>
               .

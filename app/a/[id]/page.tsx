@@ -110,7 +110,7 @@ export default function AdPage({ params }: AdPageProps) {
   const scale = integerScale(natural.width, natural.height, AD_PAGE_IMAGE_MAX);
 
   return (
-    <main className="min-h-dvh bg-[#6A3378] px-4 py-8 text-white sm:py-14">
+    <main className="min-h-dvh bg-brand-purple px-4 py-8 text-white sm:py-14">
       <article className="mx-auto flex w-full max-w-xl flex-col gap-6">
         <Link href="/" className="text-sm font-bold text-[#FCD953] hover:underline">
           Manda Pixel

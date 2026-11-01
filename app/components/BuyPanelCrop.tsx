@@ -170,7 +170,7 @@ export default function BuyPanelCrop({
               step="0.05"
               value={cropZoom}
               onChange={(e) => setCropZoom(parseFloat(e.target.value))}
-              className="w-full accent-purple-800 cursor-pointer"
+              className="w-full accent-brand-purple cursor-pointer"
             />
           </div>
         </div>

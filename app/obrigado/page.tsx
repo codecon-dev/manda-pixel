@@ -96,7 +96,7 @@ function ObrigadoContent() {
         </p>
         <Link
           href="/"
-          className="inline-flex justify-center items-center px-5 py-2.5 rounded-xl bg-purple-900 hover:bg-purple-800 text-white font-bold text-xs transition shadow-sm"
+          className="inline-flex justify-center items-center px-5 py-2.5 rounded-xl bg-brand-purple hover:bg-brand-purpleDark text-white font-bold text-xs transition shadow-sm"
         >
           Voltar para a grade
         </Link>
@@ -107,7 +107,7 @@ function ObrigadoContent() {
   if (loading && !order) {
     return (
       <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 shadow-sm text-center max-w-md w-full">
-        <div className="w-10 h-10 border-4 border-purple-200 border-t-purple-800 rounded-full animate-spin mx-auto mb-4" />
+        <div className="w-10 h-10 border-4 border-purple-200 border-t-brand-purple rounded-full animate-spin mx-auto mb-4" />
         <h1 className="text-base font-extrabold text-stone-900 mb-1">Consultando pedido</h1>
         <p className="text-xs text-stone-500 font-mono">ID: {orderId}</p>
       </div>
@@ -142,8 +142,8 @@ function ObrigadoContent() {
       {/* Status Pendente */}
       {isPending && (
         <div className="text-center space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto text-amber-600">
-            <div className="w-6 h-6 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-brand-yellow flex items-center justify-center mx-auto text-amber-600">
+            <div className="w-6 h-6 border-2 border-brand-yellow border-t-amber-600 rounded-full animate-spin" />
           </div>
           <div>
             <h1 className="text-lg font-black text-stone-950">Aguardando confirmação</h1>
@@ -168,7 +168,7 @@ function ObrigadoContent() {
           {order?.checkoutUrl && (
             <a
               href={order.checkoutUrl}
-              className="inline-block text-xs font-bold text-purple-900 hover:underline pt-2"
+              className="inline-block text-xs font-bold text-brand-purple hover:underline pt-2"
             >
               Abrir tela do checkout novamente
             </a>
@@ -221,7 +221,7 @@ function ObrigadoContent() {
                   href={ad.link_url}
                   target="_blank"
                   rel="sponsored noopener"
-                  className="font-mono text-purple-900 underline text-right truncate max-w-[200px]"
+                  className="font-mono text-brand-purple underline text-right truncate max-w-[200px]"
                 >
                   {ad.link_url}
                 </a>
@@ -232,7 +232,7 @@ function ObrigadoContent() {
           <div className="pt-2">
             <Link
               href={ad ? `/?x=${ad.x}&y=${ad.y}` : '/'}
-              className="w-full py-3 rounded-2xl bg-purple-900 hover:bg-purple-800 text-white font-bold text-xs transition shadow-md flex items-center justify-center"
+              className="w-full py-3 rounded-2xl bg-brand-purple hover:bg-brand-purpleDark text-white font-bold text-xs transition shadow-md flex items-center justify-center"
             >
               Ver meu anúncio na grade
             </Link>
@@ -244,7 +244,7 @@ function ObrigadoContent() {
       {/* Status Pago e em Revisão */}
       {isPaid && isInReview && (
         <div className="space-y-5 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-purple-100 border border-purple-300 flex items-center justify-center mx-auto text-purple-900 font-black text-lg">
+          <div className="w-12 h-12 rounded-2xl bg-purple-100 border border-purple-300 flex items-center justify-center mx-auto text-brand-purple font-black text-lg">
             ⏳
           </div>
           <div>
@@ -261,7 +261,7 @@ function ObrigadoContent() {
             </div>
             <div className="flex justify-between">
               <span className="text-stone-500">Status da moderação:</span>
-              <span className="font-bold text-purple-900">Em análise</span>
+              <span className="font-bold text-brand-purple">Em análise</span>
             </div>
           </div>
 
@@ -293,7 +293,7 @@ function ObrigadoContent() {
           <div className="pt-2">
             <Link
               href="/"
-              className="w-full py-3 rounded-2xl bg-purple-900 hover:bg-purple-800 text-white font-bold text-xs transition shadow-sm flex items-center justify-center"
+              className="w-full py-3 rounded-2xl bg-brand-purple hover:bg-brand-purpleDark text-white font-bold text-xs transition shadow-sm flex items-center justify-center"
             >
               Escolher novo espaço na grade
             </Link>
@@ -329,7 +329,7 @@ export default function ObrigadoPage() {
         <Suspense
           fallback={
             <div className="bg-white rounded-3xl border border-stone-200 p-8 shadow-sm text-center w-full">
-              <div className="w-10 h-10 border-4 border-purple-200 border-t-purple-800 rounded-full animate-spin mx-auto mb-4" />
+              <div className="w-10 h-10 border-4 border-purple-200 border-t-brand-purple rounded-full animate-spin mx-auto mb-4" />
               <p className="text-xs text-stone-500 font-medium">Carregando detalhes do pedido...</p>
             </div>
           }

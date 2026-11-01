@@ -125,7 +125,7 @@ export default function ModerationPanel() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-stone-900/60 border border-stone-800 p-4 rounded-lg">
           <p className="text-xs text-stone-400 font-medium">Aguardando Revisão</p>
-          <p className="text-2xl font-bold text-amber-400 tabular-nums mt-1">{stats.inReviewCount}</p>
+          <p className="text-2xl font-bold text-brand-yellow tabular-nums mt-1">{stats.inReviewCount}</p>
         </div>
         <div className="bg-stone-900/60 border border-stone-800 p-4 rounded-lg">
           <p className="text-xs text-stone-400 font-medium">Publicados no Ar</p>
@@ -195,7 +195,7 @@ export default function ModerationPanel() {
                     <span className="font-mono text-xs bg-stone-800 text-stone-300 px-2 py-0.5 rounded">
                       ID: {item.orderId}
                     </span>
-                    <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded">
+                    <span className="text-xs bg-amber-500/20 text-brand-yellow border border-amber-500/30 px-2 py-0.5 rounded">
                       Status: {item.status} ({item.moderationStatus})
                     </span>
                     <span className="text-xs text-stone-400 tabular-nums">
@@ -213,7 +213,7 @@ export default function ModerationPanel() {
                       href={item.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-amber-400 hover:underline truncate max-w-md inline-block"
+                      className="text-brand-yellow hover:underline truncate max-w-md inline-block"
                     >
                       {item.link}
                     </a>

@@ -42,7 +42,7 @@ function PublishedContent({ block, domain, pinned }: { block: GridBlock; domain:
   return (
     <div className="space-y-1.5">
       <AdImage block={block} />
-      <div className="flex items-center gap-1.5 font-bold text-amber-300">
+      <div className="flex items-center gap-1.5 font-bold text-brand-yellow">
         <span className="text-balance">{block.altText || 'Anúncio publicado'}</span>
         {block.xHandle && (
           <span className="text-stone-400 font-normal">@{block.xHandle.replace(/^@/, '')}</span>
@@ -62,7 +62,7 @@ function PublishedContent({ block, domain, pinned }: { block: GridBlock; domain:
           href={block.linkUrl}
           target="_blank"
           rel="sponsored noopener noreferrer nofollow"
-          className="block w-full text-center bg-amber-300 text-stone-950 font-bold rounded-lg px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200"
+          className="block w-full text-center bg-brand-yellow text-stone-950 font-bold rounded-lg px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-yellow"
         >
           Visitar site
         </a>
@@ -86,7 +86,7 @@ export default function AdTooltip({ block, screenX, screenY, domain, pinned = fa
           type="button"
           onClick={onClose}
           aria-label="Fechar anúncio"
-          className="absolute top-1 right-1 size-7 flex items-center justify-center rounded-full text-stone-300 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200"
+          className="absolute top-1 right-1 size-7 flex items-center justify-center rounded-full text-stone-300 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-yellow"
         >
           <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 6l12 12M18 6L6 18" />
@@ -97,8 +97,8 @@ export default function AdTooltip({ block, screenX, screenY, domain, pinned = fa
       {block.state === 'published' && <PublishedContent block={block} domain={domain} pinned={pinned} />}
 
       {block.state === 'in_review' && (
-        <div className="flex items-center gap-1.5 text-amber-300 font-bold">
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+        <div className="flex items-center gap-1.5 text-brand-yellow font-bold">
+          <span className="w-2 h-2 rounded-full bg-brand-yellow animate-pulse" />
           <span>Vendido • Em análise</span>
         </div>
       )}

@@ -48,7 +48,7 @@ export default function PrivacidadePage() {
         <h2 className="text-xl font-bold text-stone-950">Seus direitos (LGPD)</h2>
         <p className="mt-2">
           Para pedir acesso ou exclusão dos seus dados, escreva para{" "}
-          <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-purple-900 underline underline-offset-4">
+          <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-brand-purple underline underline-offset-4">
             {CONTACT_EMAIL}
           </a>
           .

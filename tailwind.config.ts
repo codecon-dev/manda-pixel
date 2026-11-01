@@ -12,7 +12,7 @@ const config: Config = {
         pixel: ["Silkscreen", "ui-monospace", "monospace"],
       },
       colors: {
-        brand: { purple: "#6A3378", yellow: "#FCD953" },
+        brand: { purple: "#6A3378", purpleDark: "#4F2459", yellow: "#FCD953" },
       },
     },
   },

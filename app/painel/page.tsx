@@ -43,7 +43,7 @@ export default function PainelPage() {
           <span>Manda Pixel</span>
         </a>
 
-        <h1 className="mt-8 text-4xl font-bold text-balance text-[#6A3378]">Painel</h1>
+        <h1 className="mt-8 text-4xl font-bold text-balance text-brand-purple">Painel</h1>
         <p className="mt-2 text-pretty text-stone-700">Os números do experimento, atualizados a cada acesso.</p>
 
         <dl className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -73,12 +73,12 @@ export default function PainelPage() {
         <nav aria-label="Links do site" className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm font-semibold">
           <a
             href="/"
-            className="inline-flex items-center rounded-xl bg-[#6A3378] px-4 py-2.5 text-base font-bold text-white hover:bg-purple-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6A3378]"
+            className="inline-flex items-center rounded-xl bg-brand-purple px-4 py-2.5 text-base font-bold text-white hover:bg-brand-purpleDark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-purple"
           >
             Ver a grade
           </a>
           {SECONDARY_LINKS.map((link) => (
-            <a key={link.href} href={link.href} className="text-[#6A3378] underline-offset-4 hover:underline">
+            <a key={link.href} href={link.href} className="text-brand-purple underline-offset-4 hover:underline">
               {link.label}
             </a>
           ))}

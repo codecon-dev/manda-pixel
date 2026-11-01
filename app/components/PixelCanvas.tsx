@@ -1580,7 +1580,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
               <span className="truncate font-pixel text-stone-950 text-xs sm:text-base leading-none">
                 Manda Pixel
               </span>
-              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-stone-950 leading-none whitespace-nowrap shrink-0">
+              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-yellow text-stone-950 leading-none whitespace-nowrap shrink-0">
                 R$ 1/px
               </span>
             </div>
@@ -1624,13 +1624,13 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
             </a>
             <button
               onClick={handleCtaBuyPixels}
-              className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-purple-900 hover:bg-purple-800 text-white font-bold transition shadow-sm text-xs active:scale-95 whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-brand-purple hover:bg-brand-purpleDark text-white font-bold transition shadow-sm text-xs active:scale-95 whitespace-nowrap shrink-0"
             >
-              <svg className="w-3.5 h-3.5 text-amber-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 text-brand-yellow shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
               </svg>
               <span>Comprar pixels</span>
-              <span className="hidden sm:inline text-amber-300 font-semibold">• R$ 1/px</span>
+              <span className="hidden sm:inline text-brand-yellow font-semibold">• R$ 1/px</span>
             </button>
           </div>
         </div>
@@ -1649,7 +1649,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
             {/* Barra de progresso visual rumo a 1 milhão */}
             <div className="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden" title={`${soldPixelsFormatted} de 1.000.000 pixels vendidos`}>
               <div
-                className="bg-purple-800 h-1.5 rounded-full transition-all duration-500"
+                className="bg-brand-purple h-1.5 rounded-full transition-all duration-500"
                 style={{
                   width: `${Math.min(100, Math.max(soldPixels > 0 ? 0.8 : 0, (soldPixels / totalPixels) * 100))}%`,
                 }}
@@ -1669,7 +1669,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
               <span>Publicado</span>
             </div>
             <div className="flex items-center gap-1 lg:gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 border border-amber-600" />
+              <span className="w-2.5 h-2.5 rounded-sm bg-brand-yellow border border-amber-600" />
               <span>Em análise</span>
             </div>
             <div className="flex items-center gap-1 lg:gap-1.5">
@@ -1774,7 +1774,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
       {returnBanner && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto max-w-md w-[calc(100%-2rem)] px-4 py-3 rounded-2xl bg-stone-900/95 backdrop-blur-md text-white border border-stone-700 shadow-2xl flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-4 duration-200">
           <div className="flex flex-col gap-0.5">
-            <span className="font-bold text-amber-400">
+            <span className="font-bold text-brand-yellow">
               {returnBanner.type === 'cancelado' ? 'Pagamento cancelado' : 'Reserva expirada'}
             </span>
             <span className="text-stone-300 text-[11px] leading-snug">{returnBanner.message}</span>
@@ -1799,7 +1799,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
         )}
         {selectedArea ? (
           /* PAINEL FLUTUANTE DA SELEÇÃO ATIVA */
-          <div className="pointer-events-auto bg-white/98 backdrop-blur-md border-2 border-purple-900/25 shadow-2xl rounded-2xl p-3 sm:p-3.5 max-w-xl w-full flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="pointer-events-auto bg-white/98 backdrop-blur-md border-2 border-brand-purple/25 shadow-2xl rounded-2xl p-3 sm:p-3.5 max-w-xl w-full flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
             {/* Linha Superior: Coordenadas, Dimensões, Preço e Fechar */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex flex-wrap items-center gap-1.5 min-w-0">
@@ -1837,12 +1837,12 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
                       onClick={() => applyPreset(p.w, p.h)}
                       className={`px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition active:scale-95 ${
                         isActive
-                          ? 'bg-purple-900 text-white shadow-sm'
+                          ? 'bg-brand-purple text-white shadow-sm'
                           : 'bg-stone-100 hover:bg-stone-200 text-stone-800'
                       }`}
                       title={`${p.label} pixels = R$ ${p.price}`}
                     >
-                      {p.label} <span className={isActive ? 'text-amber-300' : 'text-stone-600'}>• R$ {p.price}</span>
+                      {p.label} <span className={isActive ? 'text-brand-yellow' : 'text-stone-600'}>• R$ {p.price}</span>
                     </button>
                   );
                 })}
@@ -1898,7 +1898,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
 
             {/* Aviso visual de colisão ou limite */}
             {collisionWarning && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs font-semibold animate-in fade-in">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-brand-yellow text-amber-900 text-xs font-semibold animate-in fade-in">
                 <span className="shrink-0 text-amber-600 font-bold">⚠️</span>
                 <span className="truncate">{collisionWarning}</span>
               </div>
@@ -1914,10 +1914,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
               </button>
               <button
                 onClick={handleOpenBuyPanel}
-                className="flex-1 py-2 px-3 rounded-xl bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold transition shadow-md active:scale-[0.98] flex items-center justify-center gap-1.5"
+                className="flex-1 py-2 px-3 rounded-xl bg-brand-purple hover:bg-brand-purpleDark text-white text-xs font-bold transition shadow-md active:scale-[0.98] flex items-center justify-center gap-1.5"
               >
                 <span>Continuar com este espaço</span>
-                <span className="text-amber-300 font-extrabold">
+                <span className="text-brand-yellow font-extrabold">
                   • R$ {(selectedArea.w * selectedArea.h).toLocaleString('pt-BR')},00
                 </span>
               </button>
@@ -1932,19 +1932,19 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
                 <span className="font-extrabold text-stone-950 whitespace-nowrap shrink-0">
                   {cursorCoord.inside ? `Posição X: ${cursorCoord.x}, Y: ${cursorCoord.y}` : 'Fora da Grade'}
                 </span>
-                <span className="text-[11px] sm:text-xs text-stone-700 font-semibold whitespace-nowrap shrink-0">5×5 px mín.</span>
+                <span className="text-[11px] sm:text-xs text-stone-900 font-semibold whitespace-nowrap shrink-0">5×5 px mín.</span>
               </div>
-              <span className="text-xs text-stone-700 mt-0.5">
+              <span className="text-xs text-stone-900 font-medium mt-0.5">
                 Toque na grade ou clique em <strong>Comprar pixels</strong>
               </span>
             </div>
 
             <button
               onClick={handleCtaBuyPixels}
-              className="shrink-0 px-3.5 py-2 rounded-xl bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold shadow transition active:scale-95 flex items-center gap-1.5"
+              className="shrink-0 px-3.5 py-2 rounded-xl bg-brand-purple hover:bg-brand-purpleDark text-white text-xs font-bold shadow transition active:scale-95 flex items-center gap-1.5"
             >
               <span>Comprar pixels</span>
-              <span className="text-amber-300 font-extrabold">• R$ 1/px</span>
+              <span className="text-brand-yellow font-extrabold">• R$ 1/px</span>
             </button>
           </div>
         )}

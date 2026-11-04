@@ -32,6 +32,17 @@ export interface SelectedArea {
 
 export type HandleType = 'nw' | 'ne' | 'se' | 'sw' | 'n' | 's' | 'w' | 'e' | 'move' | 'pan' | 'pinch' | null;
 
+// Breakpoint `sm` do Tailwind: abaixo dele o card de boas-vindas fica na base da tela
+const MOBILE_BREAKPOINT = 640;
+// Fração da altura que o ponto focado sobe (de 50% para ~30%) quando o card de boas-vindas está aberto
+const WELCOME_FOCUS_SHIFT = 0.2;
+
+// Projeção: screenY = (wy - cam.y) * zoom + h / 2, então somar ao cam.y faz o ponto focado subir na tela.
+function welcomeCameraOffsetY(zoom: number, welcomeOpen: boolean): number {
+  if (typeof window === 'undefined' || !welcomeOpen || window.innerWidth >= MOBILE_BREAKPOINT) return 0;
+  return (WELCOME_FOCUS_SHIFT * window.innerHeight) / zoom;
+}
+
 export const PRESETS = [
   { w: 5, h: 5, label: '5×5', price: 25 },
   { w: 10, h: 10, label: '10×10', price: 100 },
@@ -904,10 +915,11 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const w = window.innerWidth;
-      const initialZoom = focus ? FOCUS_ZOOM : w < 640 ? 0.95 : 1.2;
+      const initialZoom = focus ? FOCUS_ZOOM : w < MOBILE_BREAKPOINT ? 0.95 : 1.2;
+      const shiftY = welcomeCameraOffsetY(initialZoom, showWelcomeRef.current);
       cameraRef.current = focus
-        ? { x: focus.x, y: focus.y, zoom: initialZoom }
-        : { x: 500, y: 500, zoom: initialZoom };
+        ? { x: focus.x, y: focus.y + shiftY, zoom: initialZoom }
+        : { x: 500, y: 500 + shiftY, zoom: initialZoom };
       setZoomDisplay(Math.round(initialZoom * 100));
       renderCanvasRef.current();
     }
@@ -924,7 +936,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
     const fit = fitCameraToAds(liveAds, vp, { minZoom: getMinZoom(), maxZoom: MAX_ZOOM });
     if (!fit) return;
     initialFitDoneRef.current = true;
-    cameraRef.current = fit;
+    cameraRef.current = { ...fit, y: fit.y + welcomeCameraOffsetY(fit.zoom, showWelcomeRef.current) };
     setZoomDisplay(Math.round(fit.zoom * 100));
     renderCanvasRef.current();
   }, [blocks, focus, getMinZoom]);
@@ -1568,6 +1580,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onPointerLeave={() => {
+          setHoveredBlock(null);
+          setHoveredFreeCell(null);
+        }}
       />
 
       {/* HEADER FLUTUANTE COM DADOS REAIS, PRESENÇA AO VIVO E CONVERSÃO */}
@@ -1659,7 +1675,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
           </div>
 
           {/* Legenda compacta dos 4 estados */}
-          <div className="pointer-events-none order-last lg:order-none flex flex-nowrap justify-center whitespace-nowrap items-center gap-2 lg:gap-2.5 bg-white/95 backdrop-blur-sm border border-stone-300 shadow-sm px-2 py-1 lg:px-3 lg:py-1.5 rounded-xl text-[10px] lg:text-[11px] text-stone-800 font-semibold">
+          <div className="pointer-events-none order-last lg:order-none flex flex-nowrap justify-center whitespace-nowrap items-center gap-2 lg:gap-2.5 bg-white/95 backdrop-blur-sm border border-stone-300 shadow-sm px-2 py-1 lg:px-3 lg:py-1.5 rounded-xl text-[11px] text-stone-800 font-semibold">
             <div className="flex items-center gap-1 lg:gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-white border border-stone-400" />
               <span>Livre</span>
@@ -1679,7 +1695,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
           </div>
 
           {/* Pílula de Código Aberto & Links institucionais */}
-          <div className="pointer-events-auto max-w-full w-full sm:w-auto flex flex-nowrap sm:flex-wrap items-center justify-between gap-x-0.5 sm:justify-center sm:gap-x-1.5 gap-y-0.5 bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm px-2.5 sm:px-2 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-bold text-stone-800">
+          <div className="pointer-events-auto max-w-full w-full sm:w-auto flex flex-nowrap sm:flex-wrap items-center justify-between gap-x-0.5 sm:justify-center sm:gap-x-1.5 gap-y-0.5 bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm px-2.5 sm:px-2 py-1.5 rounded-xl text-[11px] font-bold text-stone-800">
             <a
               href="https://github.com/codecon-dev/manda-pixel"
               target="_blank"
@@ -1740,7 +1756,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
       {/* FEEDBACK DE SNAP FLUTUANTE QUANDO SOBRE CÉLULA LIVRE */}
       {!hoveredBlock && hoveredFreeCell && (
         <div
-          className="pointer-events-none fixed z-30 -translate-x-1/2 -translate-y-full mb-3 px-2 py-1 bg-stone-900/90 text-white text-[11px] font-medium rounded-lg shadow-md border border-stone-700 animate-in fade-in"
+          className="pointer-events-none fixed z-10 -translate-x-1/2 -translate-y-full mb-3 px-2 py-1 bg-stone-900/90 text-white text-[11px] font-medium rounded-lg shadow-md border border-stone-700 animate-in fade-in"
           style={{
             left: `${hoveredFreeCell.screenX}px`,
             top: `${hoveredFreeCell.screenY - 6}px`,
@@ -1790,10 +1806,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
       )}
 
       {/* BARRA INFERIOR / HUD & CONTROLES */}
-      <div className="absolute bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-6 pb-[env(safe-area-inset-bottom)] pointer-events-none z-20 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-3 sm:gap-2.5">
+      <div className="absolute bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-6 pb-[env(safe-area-inset-bottom)] pointer-events-none z-20 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2 sm:gap-2.5">
         {/* BOAS-VINDAS NO MOBILE: NO FLUXO DA BARRA INFERIOR, LOGO ACIMA DELA, CENTRO LIVRE */}
         {showWelcome && (
-          <div className="sm:hidden pointer-events-auto max-h-[40dvh] overflow-y-auto animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="sm:hidden mb-1 pointer-events-auto max-h-[30dvh] overflow-y-auto animate-in fade-in slide-in-from-bottom-3 duration-200">
             <WelcomeCard compact onDismiss={dismissWelcome} onChooseSpace={chooseSpaceFromWelcome} />
           </div>
         )}

@@ -78,7 +78,7 @@ export default function AdTooltip({ block, screenX, screenY, domain, pinned = fa
       : screenX;
   return (
     <div
-      className={`${pinned ? 'pointer-events-auto pr-8' : 'pointer-events-none'} fixed z-30 max-w-xs -translate-x-1/2 -translate-y-full mb-3 px-3 py-2 bg-stone-950 text-white text-xs rounded-xl shadow-xl border border-stone-700 animate-in fade-in zoom-in-95`}
+      className={`${pinned ? 'pointer-events-auto pr-8 z-30' : 'pointer-events-none z-10'} fixed max-w-xs -translate-x-1/2 -translate-y-full mb-3 px-3 py-2 bg-stone-950 text-white text-xs rounded-xl shadow-xl border border-stone-700 animate-in fade-in zoom-in-95`}
       style={{ left: `${left}px`, top: `${pinned ? Math.max(screenY - 8, CARD_MIN_TOP) : screenY - 8}px` }}
     >
       {pinned && (

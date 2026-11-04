@@ -60,7 +60,7 @@ export default function WelcomeCard({ onDismiss, onChooseSpace, compact = false 
       <div className={`${footerSpacing} flex items-center justify-end gap-2 border-t border-stone-200`}>
         <button
           onClick={onDismiss}
-          className="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold transition"
+          className="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800 text-xs font-semibold transition"
         >
           Fechar
         </button>

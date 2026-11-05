@@ -19,6 +19,21 @@ export const PIXEL_PRICE_BRL = 1;
 export const TOTAL_PIXELS = 1_000_000;
 export const GOAL_BRL = 1_000_000;
 
+// Lado mínimo e múltiplo do bloco (espelha a regra de isAreaAvailable em db.ts) e minutos de reserva
+export const BLOCK_SIZE = 5;
+export const RESERVATION_MINUTES = 30;
+
+// Conteúdo proibido (termos e como-funciona)
+export const PROHIBITED = [
+  "Conteúdo adulto ou sexual.",
+  "Apostas, bets e cassino.",
+  "Criptomoeda, token, NFT, pirâmide, dinheiro fácil ou qualquer coisa com cara de golpe.",
+  "Política: partido, candidato ou campanha.",
+  "Conteúdo ilegal, de ódio, violência ou envolvendo menores.",
+  "Imagem de pessoa real sem autorização clara.",
+  "Link quebrado, encurtador suspeito ou link com download automático.",
+] as const;
+
 // Home aberta focada num ponto (?x=&y=): zoom inicial e maior coordenada aceita
 export const FOCUS_ZOOM = 4;
 export const GRID_MAX_COORD = 999;

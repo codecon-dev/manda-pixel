@@ -8,6 +8,7 @@ type LegalLayoutProps = {
 
 const FOOTER_LINKS = [
   { href: "/", label: "Início" },
+  { href: "/como-funciona", label: "Como funciona" },
   { href: "/termos", label: "Termos" },
   { href: "/privacidade", label: "Privacidade" },
   { href: "/diario", label: "Diário" },

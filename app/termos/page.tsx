@@ -1,21 +1,12 @@
 import type { Metadata } from "next";
 import LegalLayout from "@/app/components/LegalLayout";
+import { PROHIBITED } from "@/app/lib/constants";
 
 export const metadata: Metadata = {
   title: "Termos de uso",
   description: "Regras do Manda Pixel: preço, reserva, conteúdo proibido, moderação e estorno.",
   alternates: { canonical: "/termos" },
 };
-
-const PROHIBITED = [
-  "Conteúdo adulto ou sexual.",
-  "Apostas, bets e cassino.",
-  "Criptomoeda, token, NFT, pirâmide, dinheiro fácil ou qualquer coisa com cara de golpe.",
-  "Política: partido, candidato ou campanha.",
-  "Conteúdo ilegal, de ódio, violência ou envolvendo menores.",
-  "Imagem de pessoa real sem autorização clara.",
-  "Link quebrado, encurtador suspeito ou link com download automático.",
-] as const;
 
 export default function TermosPage() {
   return (

@@ -1695,7 +1695,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
           </div>
 
           {/* Pílula de Código Aberto & Links institucionais */}
-          <div className="pointer-events-auto max-w-full w-full sm:w-auto flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-1.5 gap-y-0.5 bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm px-2.5 sm:px-2 py-1.5 rounded-xl text-[11px] font-bold text-stone-800">
+          <div className="pointer-events-auto max-w-full w-full sm:w-auto flex flex-nowrap overflow-x-auto items-center justify-center gap-x-3 sm:gap-x-1.5 gap-y-0.5 bg-white/95 backdrop-blur-md border border-stone-300 shadow-sm px-2.5 sm:px-2 py-1.5 rounded-xl text-[11px] font-bold text-stone-800">
             <a
               href="https://github.com/codecon-dev/manda-pixel"
               target="_blank"
@@ -1713,11 +1713,11 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
               Como funciona
             </a>
             <span className="hidden sm:inline text-stone-600">•</span>
-            <a href="/termos" className="whitespace-nowrap hover:text-purple-950 transition">
+            <a href="/termos" className="hidden sm:inline whitespace-nowrap hover:text-purple-950 transition">
               Termos
             </a>
             <span className="hidden sm:inline text-stone-600">•</span>
-            <a href="/privacidade" className="whitespace-nowrap hover:text-purple-950 transition">
+            <a href="/privacidade" className="hidden sm:inline whitespace-nowrap hover:text-purple-950 transition">
               Privacidade
             </a>
             <span className="hidden sm:inline text-stone-600 md:hidden">•</span>
@@ -1725,7 +1725,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
               Diário
             </a>
             <span className="hidden sm:inline text-stone-600 md:hidden">•</span>
-            <a href="/time" className="md:hidden whitespace-nowrap hover:text-purple-950 transition">
+            <a href="/time" className="hidden sm:inline md:hidden whitespace-nowrap hover:text-purple-950 transition">
               Time
             </a>
             <span className="hidden sm:inline text-stone-600 md:hidden">•</span>
@@ -1810,10 +1810,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
       )}
 
       {/* BARRA INFERIOR / HUD & CONTROLES */}
-      <div className="absolute bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-6 pb-[env(safe-area-inset-bottom)] pointer-events-none z-20 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2 sm:gap-2.5">
+      <div className="absolute bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-6 pb-[env(safe-area-inset-bottom)] pointer-events-none z-20 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-3 sm:gap-2.5">
         {/* BOAS-VINDAS NO MOBILE: NO FLUXO DA BARRA INFERIOR, LOGO ACIMA DELA, CENTRO LIVRE */}
         {showWelcome && (
-          <div className="sm:hidden mb-1 pointer-events-auto max-h-[30dvh] overflow-y-auto animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="sm:hidden mb-0 pointer-events-auto max-h-[22dvh] flex flex-col animate-in fade-in slide-in-from-bottom-3 duration-200">
             <WelcomeCard compact onDismiss={dismissWelcome} onChooseSpace={chooseSpaceFromWelcome} />
           </div>
         )}
@@ -1952,9 +1952,9 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
                 <span className="font-extrabold text-stone-950 whitespace-nowrap shrink-0">
                   {cursorCoord.inside ? `Posição X: ${cursorCoord.x}, Y: ${cursorCoord.y}` : 'Fora da Grade'}
                 </span>
-                <span className="text-[11px] sm:text-xs text-stone-900 font-semibold whitespace-nowrap shrink-0">5×5 px mín.</span>
+                <span className="text-xs text-stone-900 font-bold sm:font-semibold whitespace-nowrap shrink-0">5×5 px mín.</span>
               </div>
-              <span className="text-xs text-stone-900 font-medium mt-0.5">
+              <span className="text-xs text-stone-900 font-semibold sm:font-medium leading-snug sm:leading-4 mt-0.5">
                 Toque na grade ou clique em <strong>Comprar pixels</strong>
               </span>
             </div>

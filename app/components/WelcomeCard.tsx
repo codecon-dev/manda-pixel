@@ -9,16 +9,20 @@ type WelcomeCardProps = {
 };
 
 export default function WelcomeCard({ onDismiss, onChooseSpace, compact = false }: WelcomeCardProps) {
-  const padding = compact ? 'p-3' : 'p-4';
-  const titleSize = compact ? 'text-lg' : 'text-base';
+  const padding = compact ? 'p-2.5 sm:p-3' : 'p-4';
+  const titleSize = compact ? 'text-base sm:text-lg' : 'text-base';
   const bodySize = compact ? 'text-sm leading-snug' : 'text-xs leading-relaxed';
   const noteSize = 'text-xs leading-snug';
   const footerSpacing = compact ? 'mt-2 pt-1.5' : 'mt-3 pt-2';
   const iconVisibility = compact ? 'hidden' : 'flex';
+  // compact (mobile): texto rola dentro do card, linha de botoes fica sempre visivel.
+  const cardLayout = compact ? 'flex flex-col min-h-0 max-h-full' : '';
+  const bodyScroll = compact ? 'min-h-0 flex-1 overflow-y-auto' : '';
+  const footerShrink = compact ? 'shrink-0' : '';
 
   return (
-    <div className={`bg-white/98 backdrop-blur-md border-2 border-brand-purple/20 shadow-xl rounded-2xl ${padding} text-stone-900`}>
-      <div className="flex items-start justify-between gap-3">
+    <div className={`bg-white/98 backdrop-blur-md border-2 border-brand-purple/20 shadow-xl rounded-2xl ${padding} text-stone-900 ${cardLayout}`}>
+      <div className={`flex items-start justify-between gap-3 ${bodyScroll}`}>
         <div className="flex gap-3">
           <div className={`${iconVisibility} w-8 h-8 rounded-xl bg-purple-100 border border-purple-200 text-brand-purple items-center justify-center shrink-0 font-bold text-base`}>
             🚀
@@ -57,7 +61,7 @@ export default function WelcomeCard({ onDismiss, onChooseSpace, compact = false 
         </button>
       </div>
 
-      <div className={`${footerSpacing} flex items-center justify-end gap-2 border-t border-stone-200`}>
+      <div className={`${footerSpacing} flex items-center justify-end gap-2 border-t border-stone-200 ${footerShrink}`}>
         <button
           onClick={onDismiss}
           className="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800 text-xs font-semibold transition"

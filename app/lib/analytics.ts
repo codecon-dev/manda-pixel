@@ -68,6 +68,10 @@ export function trackCheckoutRetorno(props: CheckoutRetornoProps): void {
   });
 }
 
+export function trackSharePosicao(props: { x: number; y: number }): void {
+  captureSafe('share_click', { tipo: 'posicao', x: props.x, y: props.y });
+}
+
 export function trackAnuncioPublicado(props: AnuncioPublicadoProps): void {
   captureSafe('anuncio_publicado', {
     orderId: props.orderId,

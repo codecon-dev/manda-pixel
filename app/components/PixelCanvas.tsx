@@ -11,6 +11,8 @@ import { fitCameraToAds } from '../lib/camera-fit.ts';
 import { trackBlocoSelecionado, trackCheckoutRetorno } from '../lib/analytics';
 import WelcomeCard from './WelcomeCard';
 import ExperimentDay from './ExperimentDay';
+import SharePositionButton from './SharePositionButton';
+import { useFocusSelection } from './useFocusSelection';
 
 interface Point {
   x: number;
@@ -220,6 +222,11 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
     }
   }, [blocks]);
 
+  const selectNearFocus = useCallback((f: GridFocus, list: GridBlock[]) => {
+    setSelectedArea(findFreeBlockNear(f.x, f.y, BLOCK_SIZE, BLOCK_SIZE, list));
+  }, []);
+  useFocusSelection(focus, blocks, selectedAreaRef, selectNearFocus);
+
   // Alça sob o cursor para feedback visual
   const [hoverHandle, setHoverHandle] = useState<HandleType>(null);
 
@@ -301,8 +308,9 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
     }
   }, []);
 
-  // Verifica primeira visita para exibir boas-vindas
+  // Verifica primeira visita para exibir boas-vindas (link de posicao /?x=&y= pula o card, sem gravar nada)
   useEffect(() => {
+    if (focus) return;
     try {
       const dismissed = localStorage.getItem('mandapixel_welcome_dismissed');
       if (!dismissed) {
@@ -312,7 +320,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
     } catch {
       // ignore
     }
-  }, []);
+  }, [focus]);
 
   // Heartbeat de presença a cada 25s
   useEffect(() => {
@@ -1932,12 +1940,13 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
               >
                 Cancelar
               </button>
+              <SharePositionButton x={selectedArea.x} y={selectedArea.y} />
               <button
                 onClick={handleOpenBuyPanel}
                 className="flex-1 py-2 px-3 rounded-xl bg-brand-purple hover:bg-brand-purpleDark text-white text-xs font-bold transition shadow-md active:scale-[0.98] flex items-center justify-center gap-1.5"
               >
-                <span>Continuar com este espaço</span>
-                <span className="text-brand-yellow font-extrabold">
+                <span className="whitespace-nowrap">Continuar<span className="hidden sm:inline"> com este espaço</span></span>
+                <span className="text-brand-yellow font-extrabold whitespace-nowrap">
                   • R$ {(selectedArea.w * selectedArea.h).toLocaleString('pt-BR')},00
                 </span>
               </button>
@@ -1947,12 +1956,12 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
           /* HUD QUANDO NÃO HÁ SELEÇÃO ATIVA */
           <div className="pointer-events-auto bg-white/95 backdrop-blur-md border border-stone-300 shadow-md rounded-2xl p-2.5 sm:px-4 sm:py-3 flex items-center justify-between gap-3 tabular-nums">
             <div className="flex flex-col min-w-0">
-              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 min-w-0 text-xs">
+              <div className="flex flex-nowrap items-center gap-x-1.5 gap-y-0 min-w-0 text-xs">
                 <span className="inline-block w-2.5 h-2.5 rounded-full bg-stone-400 shrink-0" />
                 <span className="font-extrabold text-stone-950 whitespace-nowrap shrink-0">
                   {cursorCoord.inside ? `Posição X: ${cursorCoord.x}, Y: ${cursorCoord.y}` : 'Fora da Grade'}
                 </span>
-                <span className="text-xs text-stone-900 font-bold sm:font-semibold whitespace-nowrap shrink-0">5×5 px mín.</span>
+                <span className="hidden sm:inline text-xs text-stone-900 font-bold sm:font-semibold whitespace-nowrap shrink-0">5×5 px mín.</span>
               </div>
               <span className="text-xs text-stone-900 font-semibold sm:font-medium leading-snug sm:leading-4 mt-0.5">
                 Toque na grade ou clique em <strong>Comprar pixels</strong>

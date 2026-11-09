@@ -38,6 +38,12 @@ export const PROHIBITED = [
 export const FOCUS_ZOOM = 4;
 export const GRID_MAX_COORD = 999;
 
+// Página /previa: janela da grade mostrada (lado em pixels da grade), canvas de compartilhamento e lados oferecidos
+export const PREVIEW_WINDOW = 200;
+export const PREVIEW_WIDTH = 1200;
+export const PREVIEW_HEIGHT = 630;
+export const PREVIEW_SIZES = [5, 10, 20, 30, 50] as const;
+
 // Página pública do anúncio: largura máxima da imagem e corte da descrição
 export const AD_PAGE_IMAGE_MAX = 480;
 export const AD_DESCRIPTION_MAX = 150;

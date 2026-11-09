@@ -72,6 +72,14 @@ export function trackSharePosicao(props: { x: number; y: number }): void {
   captureSafe('share_click', { tipo: 'posicao', x: props.x, y: props.y });
 }
 
+/** Pagina /previa: so acao, posicao e lado do quadrado (nada da imagem). */
+export function trackPreviewLogo(
+  acao: 'upload' | 'download' | 'share' | 'comprar',
+  props: { x: number; y: number; tamanho: number },
+): void {
+  captureSafe('preview_logo', { acao, x: props.x, y: props.y, tamanho: props.tamanho });
+}
+
 export function trackAnuncioPublicado(props: AnuncioPublicadoProps): void {
   captureSafe('anuncio_publicado', {
     orderId: props.orderId,

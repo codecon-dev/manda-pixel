@@ -38,6 +38,13 @@ export default function ComoFuncionaPage() {
           R$ {PIXEL_PRICE_BRL} por pixel. O bloco mínimo é de {BLOCK_SIZE}x{BLOCK_SIZE}, ou seja, R$ {MIN_AD_BRL}, e
           os lados crescem de {BLOCK_SIZE} em {BLOCK_SIZE}.
         </p>
+        <p className="mt-2">
+          Na dúvida do tamanho?{" "}
+          <Link href="/previa" className="font-semibold text-purple-950 underline underline-offset-2">
+            Veja seu logo na grade antes de comprar
+          </Link>{" "}
+          e baixe a imagem pra mostrar pra alguém.
+        </p>
       </section>
 
       <section>

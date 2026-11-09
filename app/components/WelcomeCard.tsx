@@ -76,6 +76,11 @@ export default function WelcomeCard({ onDismiss, onChooseSpace, compact = false 
           <span className="text-brand-yellow font-extrabold">→</span>
         </button>
       </div>
+      <p className={`mt-1.5 text-right text-xs leading-snug ${footerShrink}`}>
+        <a href="/previa" className={LINK_CLASS}>
+          Ver meu logo na grade antes de comprar
+        </a>
+      </p>
     </div>
   );
 }

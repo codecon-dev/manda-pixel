@@ -2,15 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import LogoPreviewControls, { LogoPreviewActions } from './LogoPreviewControls';
-import { drawPreview } from './logoPreviewCanvas';
-import { BLOCK_SIZE, GRID_MAX_COORD, MAX_UPLOAD_BYTES, PREVIEW_HEIGHT, PREVIEW_WIDTH, SITE_URL } from '@/app/lib/constants';
-import { NoFreeSpaceError, nearestFree, overlaps, snapRect, viewWindow } from '@/app/lib/logo-preview';
+import PreviewZoomControl from './PreviewZoomControl';
+import PreviewMapInfo from './PreviewMapInfo';
+import { drawScreenMap, renderShareImage, sceneWindow, type PreviewScene } from './logoPreviewCanvas';
+import { BLOCK_SIZE, GRID_MAX_COORD, MAX_UPLOAD_BYTES, PREVIEW_SCREEN_SIZE, SITE_URL } from '@/app/lib/constants';
+import { NoFreeSpaceError, nearestFree, overlaps, snapRect } from '@/app/lib/logo-preview';
 import { trackPreviewLogo } from '@/app/lib/analytics';
 import type { GridBlock, GridResponse } from '@/app/lib/db';
-import type { PreviewRect } from '@/types/preview';
+import type { PreviewRect, PreviewZoom } from '@/types/preview';
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
 const DEFAULT_SIZE = 20;
+const DEFAULT_ZOOM: PreviewZoom = 'perto';
 const DOWNLOAD_NAME = 'manda-pixel-previa.png';
 const SHARE_TEXT = 'olha meu logo na grade do Manda Pixel';
 function parseCoordText(text: string): number {
@@ -35,10 +38,10 @@ function placeRect(x: number, y: number, size: number, blocks: readonly GridBloc
 }
 
 /** Carrega (uma vez) as imagens dos anuncios publicados que aparecem na janela; avisa quando cada uma chega. */
-function useBlockImages(blocks: readonly GridBlock[], rect: PreviewRect, onLoad: () => void) {
+function useBlockImages(blocks: readonly GridBlock[], rect: PreviewRect, zoom: PreviewZoom, onLoad: () => void) {
   const cache = useRef(new Map<string, HTMLImageElement>());
   useEffect(() => {
-    const win = viewWindow(rect.x, rect.y, rect.w);
+    const win = sceneWindow({ rect, zoom });
     const winRect = { x: win.x, y: win.y, w: win.size, h: win.size };
     const visible = blocks.filter((b) => b.imageUrl && b.state === 'published' && overlaps(winRect, [b]));
     for (const b of visible) {
@@ -49,7 +52,7 @@ function useBlockImages(blocks: readonly GridBlock[], rect: PreviewRect, onLoad:
       img.src = url;
       cache.current.set(url, img);
     }
-  }, [blocks, rect, onLoad]);
+  }, [blocks, rect, zoom, onLoad]);
   return cache.current;
 }
 
@@ -90,6 +93,7 @@ export default function LogoPreview({ initialX, initialY }: { initialX: number; 
   const [xText, setXText] = useState(String(initialX));
   const [yText, setYText] = useState(String(initialY));
   const [size, setSize] = useState(DEFAULT_SIZE);
+  const [zoom, setZoom] = useState<PreviewZoom>(DEFAULT_ZOOM);
   const [logo, setLogo] = useState<HTMLImageElement | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -112,12 +116,13 @@ export default function LogoPreview({ initialX, initialY }: { initialX: number; 
     () => placeRect(parseCoordText(xText), parseCoordText(yText), size, blocks),
     [xText, yText, size, blocks],
   );
-  const images = useBlockImages(blocks, rect, bump);
+  const images = useBlockImages(blocks, rect, zoom, bump);
   const track = { x: rect.x, y: rect.y, tamanho: size };
+  const scene: PreviewScene = { rect, blocks, images, logo, zoom };
 
   useEffect(() => {
-    if (canvasRef.current) drawPreview(canvasRef.current, { rect, blocks, images, logo });
-  }, [rect, blocks, images, logo, redraw]);
+    if (canvasRef.current) drawScreenMap(canvasRef.current, { rect, blocks, images, logo, zoom });
+  }, [rect, blocks, images, logo, zoom, redraw]);
 
   function onFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -137,15 +142,13 @@ export default function LogoPreview({ initialX, initialY }: { initialX: number; 
   }
 
   async function download() {
-    if (!canvasRef.current) return;
-    await downloadCanvas(canvasRef.current);
+    await downloadCanvas(renderShareImage(scene));
     trackPreviewLogo('download', track);
   }
 
   async function share() {
-    if (!canvasRef.current) return;
     trackPreviewLogo('share', track);
-    await shareCanvas(canvasRef.current, `${SITE_URL}/?x=${rect.x}&y=${rect.y}`);
+    await shareCanvas(renderShareImage(scene), `${SITE_URL}/?x=${rect.x}&y=${rect.y}`);
   }
 
   return (
@@ -153,15 +156,17 @@ export default function LogoPreview({ initialX, initialY }: { initialX: number; 
       <div className="min-w-0">
         <canvas
           ref={canvasRef}
-          width={PREVIEW_WIDTH}
-          height={PREVIEW_HEIGHT}
-          className="block h-auto w-full rounded-xl border border-stone-200 shadow-sm"
+          width={PREVIEW_SCREEN_SIZE}
+          height={PREVIEW_SCREEN_SIZE}
+          className="mx-auto block aspect-square w-full max-w-[560px] rounded-xl border border-stone-200 shadow-sm"
           aria-label={`Prévia do seu logo na posição (${rect.x}, ${rect.y}) da grade`}
           role="img"
         />
-        {gridError && <p className="mt-2 text-sm text-stone-700">{gridError}</p>}
+        <PreviewMapInfo rect={rect} free={!overlaps(rect, blocks)} />
+        {gridError && <p className="mx-auto mt-2 max-w-[560px] text-sm text-stone-700">{gridError}</p>}
       </div>
-      <div className="space-y-4">
+      <div className="space-y-4 lg:sticky lg:top-4">
+        <PreviewZoomControl zoom={zoom} onZoom={setZoom} />
         <LogoPreviewControls
           xText={xText}
           yText={yText}

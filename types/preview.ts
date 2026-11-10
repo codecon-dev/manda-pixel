@@ -13,4 +13,7 @@ export interface PreviewWindow {
   size: number;
 }
 
+/** Nivel de zoom da previa: perto do logo, medio ou a grade inteira. */
+export type PreviewZoom = 'perto' | 'medio' | 'grade';
+
 export type PreviewLogoAction = 'upload' | 'download' | 'share' | 'comprar';

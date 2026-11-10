@@ -43,6 +43,10 @@ export const PREVIEW_WINDOW = 200;
 export const PREVIEW_WIDTH = 1200;
 export const PREVIEW_HEIGHT = 630;
 export const PREVIEW_SIZES = [5, 10, 20, 30, 50] as const;
+// Zoom da /previa: janela = maior lado do logo x fator, travada entre min e a grade inteira; lado do canvas na tela
+export const PREVIEW_ZOOM_NEAR = { factor: 5, min: 60 } as const;
+export const PREVIEW_ZOOM_MEDIUM = { factor: 12, min: 200 } as const;
+export const PREVIEW_SCREEN_SIZE = 800;
 
 // Página pública do anúncio: largura máxima da imagem e corte da descrição
 export const AD_PAGE_IMAGE_MAX = 480;

@@ -1,6 +1,13 @@
-import { BLOCK_SIZE, GRID_MAX_COORD, PIXEL_PRICE_BRL, PREVIEW_WINDOW } from './constants.ts';
+import {
+  BLOCK_SIZE,
+  GRID_MAX_COORD,
+  PIXEL_PRICE_BRL,
+  PREVIEW_WINDOW,
+  PREVIEW_ZOOM_MEDIUM,
+  PREVIEW_ZOOM_NEAR,
+} from './constants.ts';
 import type { GridBlock } from './db.ts';
-import type { PreviewRect, PreviewWindow } from '../../types/preview.ts';
+import type { PreviewRect, PreviewWindow, PreviewZoom } from '../../types/preview.ts';
 
 const GRID_SIZE = GRID_MAX_COORD + 1;
 const MAX_RINGS = GRID_SIZE / BLOCK_SIZE;
@@ -16,14 +23,22 @@ function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
 }
 
-/** Janela de PREVIEW_WINDOW x PREVIEW_WINDOW da grade, centrada no retangulo e travada dentro de 0..1000. */
-export function viewWindow(x: number, y: number, size: number): PreviewWindow {
-  const maxStart = GRID_SIZE - PREVIEW_WINDOW;
-  const half = PREVIEW_WINDOW / 2;
+/** Lado da janela da previa para um logo logoW x logoH no zoom pedido (perto, medio ou grade inteira). */
+export function previewWindowSize(logoW: number, logoH: number, zoom: PreviewZoom): number {
+  if (zoom === 'grade') return GRID_SIZE;
+  const { factor, min } = zoom === 'perto' ? PREVIEW_ZOOM_NEAR : PREVIEW_ZOOM_MEDIUM;
+  return clamp(Math.max(logoW, logoH) * factor, min, GRID_SIZE);
+}
+
+/** Janela de winSize x winSize da grade, centrada no retangulo e travada dentro de 0..1000. */
+export function viewWindow(x: number, y: number, size: number, winSize: number = PREVIEW_WINDOW): PreviewWindow {
+  const side = clamp(winSize, 1, GRID_SIZE);
+  const maxStart = GRID_SIZE - side;
+  const half = side / 2;
   return {
     x: clamp(Math.round(x + size / 2 - half), 0, maxStart),
     y: clamp(Math.round(y + size / 2 - half), 0, maxStart),
-    size: PREVIEW_WINDOW,
+    size: side,
   };
 }
 

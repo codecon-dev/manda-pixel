@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   nearestFree,
   overlaps,
+  previewWindowSize,
   priceLabel,
   snapRect,
   toCanvasRect,
@@ -24,6 +25,35 @@ test('viewWindow trava no canto (995,995)', () => {
 
 test('viewWindow centra o retangulo no meio da grade', () => {
   assert.deepEqual(viewWindow(500, 500, 10), { x: 405, y: 405, size: 200 });
+});
+
+test('previewWindowSize perto: 20x20 da janela de 100', () => {
+  assert.equal(previewWindowSize(20, 20, 'perto'), 100);
+});
+
+test('previewWindowSize perto: 5x5 respeita o minimo de 60', () => {
+  assert.equal(previewWindowSize(5, 5, 'perto'), 60);
+});
+
+test('previewWindowSize perto: 300x300 trava na grade inteira', () => {
+  assert.equal(previewWindowSize(300, 300, 'perto'), 1000);
+});
+
+test('previewWindowSize grade: sempre a grade inteira', () => {
+  assert.equal(previewWindowSize(20, 20, 'grade'), 1000);
+});
+
+test('previewWindowSize medio: 20x20 da 240', () => {
+  assert.equal(previewWindowSize(20, 20, 'medio'), 240);
+});
+
+test('viewWindow com zoom trava na borda (logo em x=990)', () => {
+  const win = viewWindow(990, 500, 10, previewWindowSize(10, 10, 'perto'));
+  assert.deepEqual(win, { x: 940, y: 475, size: 60 });
+});
+
+test('viewWindow na grade inteira comeca em (0,0)', () => {
+  assert.deepEqual(viewWindow(990, 990, 10, 1000), { x: 0, y: 0, size: 1000 });
 });
 
 test('toCanvasRect escala a janela para o canvas', () => {

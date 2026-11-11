@@ -14,6 +14,7 @@ import WelcomeCard from './WelcomeCard';
 import ExperimentDay from './ExperimentDay';
 import SharePositionButton from './SharePositionButton';
 import { useFocusSelection } from './useFocusSelection';
+import { getHandlePositions, hitTestHandles, HANDLE_CORNER_SIZE_PX } from '../lib/resize-handles.ts';
 
 interface Point {
   x: number;
@@ -129,34 +130,7 @@ function getHandleHit(
 
   const originX = (area.x - cam.x) * cam.zoom + vp.width / 2;
   const originY = (area.y - cam.y) * cam.zoom + vp.height / 2;
-  const wPx = area.w * cam.zoom;
-  const hPx = area.h * cam.zoom;
-  const rightX = originX + wPx;
-  const bottomY = originY + hPx;
-  const midX = originX + wPx / 2;
-  const midY = originY + hPx / 2;
-
-  const cornerR = 18;
-  const edgeR = 14;
-
-  // Cantos
-  if (Math.hypot(screenX - originX, screenY - originY) <= cornerR) return 'nw';
-  if (Math.hypot(screenX - rightX, screenY - originY) <= cornerR) return 'ne';
-  if (Math.hypot(screenX - rightX, screenY - bottomY) <= cornerR) return 'se';
-  if (Math.hypot(screenX - originX, screenY - bottomY) <= cornerR) return 'sw';
-
-  // Bordas
-  if (wPx > 18 && Math.hypot(screenX - midX, screenY - originY) <= edgeR) return 'n';
-  if (wPx > 18 && Math.hypot(screenX - midX, screenY - bottomY) <= edgeR) return 's';
-  if (hPx > 18 && Math.hypot(screenX - originX, screenY - midY) <= edgeR) return 'w';
-  if (hPx > 18 && Math.hypot(screenX - rightX, screenY - midY) <= edgeR) return 'e';
-
-  // Interior para arrastar / mover
-  if (screenX >= originX && screenX <= rightX && screenY >= originY && screenY <= bottomY) {
-    return 'move';
-  }
-
-  return null;
+  return hitTestHandles(screenX, screenY, { x: originX, y: originY, w: area.w * cam.zoom, h: area.h * cam.zoom });
 }
 
 interface PixelCanvasProps {
@@ -701,9 +675,9 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
       ctx.strokeRect(bScreen.x + 1, bScreen.y + 1, Math.max(0, bW - 2), Math.max(0, bH - 2));
       ctx.restore();
 
-      // Alças de redimensionamento nos 4 cantos e 4 lados
+      // Alças de redimensionamento: só as visíveis para o tamanho do bloco na tela
       const drawCornerHandle = (hx: number, hy: number) => {
-        const size = Math.max(8, Math.min(12, 10));
+        const size = HANDLE_CORNER_SIZE_PX;
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(hx - size / 2, hy - size / 2, size, size);
         ctx.strokeStyle = '#6A3378';
@@ -725,20 +699,9 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
         ctx.fillRect(hx - (w - 4) / 2, hy - (h - 4) / 2, Math.max(1, w - 4), Math.max(1, h - 4));
       };
 
-      // 4 cantos
-      drawCornerHandle(bScreen.x, bScreen.y); // NW
-      drawCornerHandle(bScreen.x + bW, bScreen.y); // NE
-      drawCornerHandle(bScreen.x + bW, bScreen.y + bH); // SE
-      drawCornerHandle(bScreen.x, bScreen.y + bH); // SW
-
-      // 4 bordas (quando largura/altura permitir)
-      if (bW > 24) {
-        drawEdgeHandle(bScreen.x + bW / 2, bScreen.y, false); // N
-        drawEdgeHandle(bScreen.x + bW / 2, bScreen.y + bH, false); // S
-      }
-      if (bH > 24) {
-        drawEdgeHandle(bScreen.x, bScreen.y + bH / 2, true); // W
-        drawEdgeHandle(bScreen.x + bW, bScreen.y + bH / 2, true); // E
+      for (const p of getHandlePositions({ x: bScreen.x, y: bScreen.y, w: bW, h: bH })) {
+        if (p.corner) drawCornerHandle(p.x, p.y);
+        else drawEdgeHandle(p.x, p.y, p.handle === 'e' || p.handle === 'w');
       }
 
       // Rótulo flutuante com dimensões e valor em R$

@@ -22,7 +22,8 @@ export interface CheckoutIniciadoProps {
   value: number;
 }
 
-export type CheckoutRetornoResultado = 'sucesso' | 'cancelado' | 'expirado';
+/** Status do pedido lido no retorno do checkout. */
+export type CheckoutRetornoResultado = 'sucesso' | 'pendente' | 'expirado' | 'estornado';
 
 export interface CheckoutRetornoProps {
   orderId: string;

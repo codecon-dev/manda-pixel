@@ -74,3 +74,12 @@ export interface ModerationActionResponse {
   success: boolean;
   item: ModerationQueueItem;
 }
+
+export interface OrderErrorResponse {
+  error: string;
+}
+
+export interface OrderStatusResult {
+  httpStatus: number;
+  body: OrderSyncResponse | OrderErrorResponse;
+}

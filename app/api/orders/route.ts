@@ -6,6 +6,7 @@ import {
   isAreaAvailable,
   createReservedAd,
 } from '@/app/lib/db';
+import { isValidPublicAdId } from '@/app/lib/ad-rules';
 import { validateAdInput } from '@/app/lib/moderation';
 import { validateAdPng } from '@/app/lib/upload-validation';
 import type { CreateOrderInput, CreateOrderResponse } from '@/types/orders';
@@ -117,6 +118,10 @@ export async function POST(request: NextRequest) {
 
     const gatewayData = await gatewayRes.json();
     const orderId = gatewayData.orderId;
+    if (typeof orderId !== 'string' || !isValidPublicAdId(orderId)) {
+      console.error('[POST /api/orders] orderId inválido do gateway');
+      return NextResponse.json({ error: 'Resposta inválida do sistema de pagamento.' }, { status: 502 });
+    }
 
     // Salva o PNG decodificando o dataUrl
     const dataDir = getDataDir();

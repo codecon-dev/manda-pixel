@@ -8,7 +8,8 @@ import { FOCUS_ZOOM, SMOOTH_MIN_SCALE } from '../lib/constants.ts';
 import type { GridFocus } from '@/types/ads';
 import { selectionStartFromCamera } from '../lib/selection-start.ts';
 import { fitCameraToAds } from '../lib/camera-fit.ts';
-import { trackBlocoSelecionado, trackCheckoutRetorno } from '../lib/analytics';
+import { trackBlocoSelecionado } from '../lib/analytics';
+import { useCheckoutReturn } from './useCheckoutReturn';
 import WelcomeCard from './WelcomeCard';
 import ExperimentDay from './ExperimentDay';
 import SharePositionButton from './SharePositionButton';
@@ -263,40 +264,8 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
   const [showWelcome, setShowWelcome] = useState<boolean>(false);
   const showWelcomeRef = useRef<boolean>(false);
 
-  // Retorno de checkout cancelado ou expirado via query params
-  const [returnBanner, setReturnBanner] = useState<{
-    type: 'cancelado' | 'expirado';
-    message: string;
-  } | null>(null);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const orderId = params.get('order');
-    const cancelado = params.get('cancelado');
-    const expirado = params.get('expirado');
-
-    if (orderId && (cancelado === '1' || expirado === '1')) {
-      const motivo: 'cancelado' | 'expirado' = cancelado === '1' ? 'cancelado' : 'expirado';
-      const message =
-        motivo === 'cancelado'
-          ? 'Seu pagamento foi cancelado. A área selecionada foi liberada na grade.'
-          : 'O tempo limite da reserva expirou. A área selecionada foi liberada na grade.';
-
-      setReturnBanner({ type: motivo, message });
-
-      trackCheckoutRetorno({
-        orderId,
-        resultado: motivo,
-      });
-
-      fetch(`/api/orders/${orderId}?${motivo}=1`, { cache: 'no-store' })
-        .then(() => {
-          if (onRefresh) onRefresh();
-        })
-        .catch(() => {});
-    }
-  }, [onRefresh]);
+  // Retorno do checkout: status real do pedido
+  const { banner: returnBanner, dismiss: dismissReturnBanner } = useCheckoutReturn(onRefresh);
 
   const dismissWelcome = useCallback(() => {
     setShowWelcome(false);
@@ -1798,17 +1767,17 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
         </div>
       )}
 
-      {/* AVISO DE RETORNO DO CHECKOUT (CANCELADO OU EXPIRADO) */}
+      {/* AVISO DE RETORNO DO CHECKOUT */}
       {returnBanner && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto max-w-md w-[calc(100%-2rem)] px-4 py-3 rounded-2xl bg-stone-900/95 backdrop-blur-md text-white border border-stone-700 shadow-2xl flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-4 duration-200">
           <div className="flex flex-col gap-0.5">
             <span className="font-bold text-brand-yellow">
-              {returnBanner.type === 'cancelado' ? 'Pagamento cancelado' : 'Reserva expirada'}
+              {returnBanner.title}
             </span>
             <span className="text-stone-300 text-[11px] leading-snug">{returnBanner.message}</span>
           </div>
           <button
-            onClick={() => setReturnBanner(null)}
+            onClick={dismissReturnBanner}
             className="text-stone-400 hover:text-white font-bold p-1.5 rounded-lg shrink-0"
             aria-label="Fechar aviso"
           >

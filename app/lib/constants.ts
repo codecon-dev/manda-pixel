@@ -63,3 +63,6 @@ export const FIT_MAX_ZOOM = 12;
 // Experimento: data de início (horário de São Paulo) e duração em dias
 export const EXPERIMENT_START = "2026-11-01";
 export const EXPERIMENT_DAYS = 365;
+
+// Intervalo mínimo entre varreduras de imagens de pedidos expirados
+export const EXPIRED_UPLOAD_SWEEP_MS = 60 * 60 * 1000;

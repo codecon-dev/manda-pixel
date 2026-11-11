@@ -61,6 +61,14 @@ export const PRESENCE_TTL_MS = 60_000;
 export const FIT_VIEWPORT_FRACTION = 0.6;
 export const FIT_MIN_SIDE = 40;
 export const FIT_MAX_ZOOM = 12;
+// Vista inicial: blocos a até esta distância (px de grade) formam o mesmo aglomerado; só o principal entra na câmera
+export const CLUSTER_LINK_DISTANCE = 50;
+// Margem em volta do aglomerado (fração do lado) e piso de zoom: 4 px de tela por pixel (bloco 5x5 = 20 px)
+export const INITIAL_CAMERA_MARGIN = 0.12;
+export const INITIAL_CAMERA_MIN_ZOOM = 4;
+// Altura (px de tela) do header flutuante da home que cobre o topo da grade (no celular a 2a linha quebra em 3)
+export const HOME_HEADER_INSET = 124;
+export const HOME_HEADER_INSET_MOBILE = 180;
 
 // Experimento: data de início (horário de São Paulo) e duração em dias
 export const EXPERIMENT_START = "2026-11-01";

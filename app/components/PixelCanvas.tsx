@@ -4,10 +4,10 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { GridBlock, GridStats } from '../lib/db';
 import BuyPanel from './BuyPanel';
 import AdTooltip, { type AdTooltipTarget } from './AdTooltip';
-import { FOCUS_ZOOM, SMOOTH_MIN_SCALE } from '../lib/constants.ts';
+import { FOCUS_ZOOM, HOME_HEADER_INSET, HOME_HEADER_INSET_MOBILE, SMOOTH_MIN_SCALE } from '../lib/constants.ts';
 import type { GridFocus } from '@/types/ads';
 import { selectionStartFromCamera } from '../lib/selection-start.ts';
-import { fitCameraToAds } from '../lib/camera-fit.ts';
+import { initialCamera } from '../lib/initial-camera.ts';
 import { trackBlocoSelecionado } from '../lib/analytics';
 import { useCheckoutReturn } from './useCheckoutReturn';
 import WelcomeCard from './WelcomeCard';
@@ -910,10 +910,20 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
     const liveAds = blocks.filter((block) => block.state === 'published');
     const vp = viewportRef.current;
     if (vp.width === 0 || vp.height === 0) return;
-    const fit = fitCameraToAds(liveAds, vp, { minZoom: getMinZoom(), maxZoom: MAX_ZOOM });
+    // No celular o card de boas-vindas cobre a base: a faixa visível termina em 1 - 2 * WELCOME_FOCUS_SHIFT da altura
+    const welcomeBottom = welcomeCameraOffsetY(1, showWelcomeRef.current) > 0 ? 2 * WELCOME_FOCUS_SHIFT * vp.height : 0;
+    const fit = initialCamera(
+      liveAds,
+      {
+        ...vp,
+        insetTop: vp.width < MOBILE_BREAKPOINT ? HOME_HEADER_INSET_MOBILE : HOME_HEADER_INSET,
+        insetBottom: welcomeBottom,
+      },
+      { minZoom: getMinZoom(), maxZoom: MAX_ZOOM }
+    );
     if (!fit) return;
     initialFitDoneRef.current = true;
-    cameraRef.current = { ...fit, y: fit.y + welcomeCameraOffsetY(fit.zoom, showWelcomeRef.current) };
+    cameraRef.current = fit;
     setZoomDisplay(Math.round(fit.zoom * 100));
     renderCanvasRef.current();
   }, [blocks, focus, getMinZoom]);

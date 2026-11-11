@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { initialCamera, mainCluster, rectGap } from '../app/lib/initial-camera.ts';
-import { INITIAL_CAMERA_MIN_ZOOM } from '../app/lib/constants.ts';
+import {
+  HOME_HEADER_INSET,
+  INITIAL_CAMERA_MIN_ZOOM,
+  WELCOME_CARD_DESKTOP_H,
+} from '../app/lib/constants.ts';
 
 const DESKTOP = { width: 1280, height: 800 };
 const MOBILE = { width: 390, height: 844 };
@@ -63,6 +67,18 @@ test('insets: centro do cluster vai para o meio da faixa visível', () => {
   assert.ok(cam.zoom >= INITIAL_CAMERA_MIN_ZOOM);
   const screenY = (487.5 - cam.y) * cam.zoom + vp.height / 2;
   assert.ok(Math.abs(screenY - (104 + (844 - 104 - 338) / 2)) < 1e-9);
+});
+
+test('desktop com card de boas-vindas: cluster no meio da faixa abaixo do card', () => {
+  const insetTop = HOME_HEADER_INSET + WELCOME_CARD_DESKTOP_H;
+  const vp = { ...DESKTOP, insetTop, insetBottom: 0 };
+  const cam = initialCamera(CENTRAL, vp, LIMITS);
+  assert.ok(cam);
+  assert.ok(cam.zoom >= INITIAL_CAMERA_MIN_ZOOM);
+  const screenY = (487.5 - cam.y) * cam.zoom + vp.height / 2;
+  assert.ok(Math.abs(screenY - (insetTop + (vp.height - insetTop) / 2)) < 1e-9);
+  // topo do cluster (y 455, com margem) fica abaixo do card
+  assert.ok((455 - cam.y) * cam.zoom + vp.height / 2 >= insetTop);
 });
 
 test('zoom respeita o máximo existente', () => {

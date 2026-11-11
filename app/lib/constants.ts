@@ -78,6 +78,8 @@ export const INITIAL_CAMERA_MIN_ZOOM = 4;
 // Altura (px de tela) do header flutuante da home que cobre o topo da grade (no celular a 2a linha quebra em 3)
 export const HOME_HEADER_INSET = 124;
 export const HOME_HEADER_INSET_MOBILE = 180;
+// Altura (px de tela) do card de boas-vindas no desktop, usada se o card ainda não foi medido
+export const WELCOME_CARD_DESKTOP_H = 230;
 
 // Experimento: data de início (horário de São Paulo) e duração em dias
 export const EXPERIMENT_START = "2026-11-01";

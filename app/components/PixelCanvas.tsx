@@ -4,7 +4,13 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { GridBlock, GridStats } from '../lib/db';
 import BuyPanel from './BuyPanel';
 import AdTooltip, { type AdTooltipTarget } from './AdTooltip';
-import { FOCUS_ZOOM, HOME_HEADER_INSET, HOME_HEADER_INSET_MOBILE, SMOOTH_MIN_SCALE } from '../lib/constants.ts';
+import {
+  FOCUS_ZOOM,
+  HOME_HEADER_INSET,
+  HOME_HEADER_INSET_MOBILE,
+  SMOOTH_MIN_SCALE,
+  WELCOME_CARD_DESKTOP_H,
+} from '../lib/constants.ts';
 import type { GridFocus } from '@/types/ads';
 import { selectionStartFromCamera } from '../lib/selection-start.ts';
 import { initialCamera } from '../lib/initial-camera.ts';
@@ -50,6 +56,13 @@ const WELCOME_FOCUS_SHIFT = 0.2;
 function welcomeCameraOffsetY(zoom: number, welcomeOpen: boolean): number {
   if (typeof window === 'undefined' || !welcomeOpen || window.innerWidth >= MOBILE_BREAKPOINT) return 0;
   return (WELCOME_FOCUS_SHIFT * window.innerHeight) / zoom;
+}
+
+// Quantos px de tela, a partir da base, um elemento flutuante cobre (0 se ainda não foi desenhado)
+function coveredFromBottom(el: HTMLElement | null, viewportHeight: number): number {
+  const rect = el?.getBoundingClientRect();
+  if (!rect || rect.height === 0) return 0;
+  return Math.max(0, viewportHeight - rect.top);
 }
 
 export const PRESETS = [
@@ -253,6 +266,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
   // Banner compacto de boas-vindas na primeira visita
   const [showWelcome, setShowWelcome] = useState<boolean>(false);
   const showWelcomeRef = useRef<boolean>(false);
+  // Card de boas-vindas do desktop: medido para a câmera inicial não deixar anúncios sob ele
+  const welcomeDesktopRef = useRef<HTMLDivElement>(null);
+  // Barra inferior (e card do mobile, que vive nela): medida para a câmera inicial não deixar anúncios sob ela
+  const bottomHudRef = useRef<HTMLDivElement>(null);
 
   // Retorno do checkout: status real do pedido
   const { banner: returnBanner, dismiss: dismissReturnBanner } = useCheckoutReturn(onRefresh);
@@ -766,12 +783,17 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
     if (vp.width === 0 || vp.height === 0) return;
     // No celular o card de boas-vindas cobre a base: a faixa visível termina em 1 - 2 * WELCOME_FOCUS_SHIFT da altura
     const welcomeBottom = welcomeCameraOffsetY(1, showWelcomeRef.current) > 0 ? 2 * WELCOME_FOCUS_SHIFT * vp.height : 0;
+    // No desktop o card fica no header, logo abaixo das barras: a faixa visível começa depois dele
+    const welcomeTop =
+      vp.width >= MOBILE_BREAKPOINT && showWelcomeRef.current
+        ? welcomeDesktopRef.current?.getBoundingClientRect().height || WELCOME_CARD_DESKTOP_H
+        : 0;
     const fit = initialCamera(
       liveAds,
       {
         ...vp,
-        insetTop: vp.width < MOBILE_BREAKPOINT ? HOME_HEADER_INSET_MOBILE : HOME_HEADER_INSET,
-        insetBottom: welcomeBottom,
+        insetTop: vp.width < MOBILE_BREAKPOINT ? HOME_HEADER_INSET_MOBILE : HOME_HEADER_INSET + welcomeTop,
+        insetBottom: Math.max(welcomeBottom, coveredFromBottom(bottomHudRef.current, vp.height)),
       },
       { minZoom: getMinZoom(), maxZoom: MAX_ZOOM }
     );
@@ -1589,7 +1611,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
 
         {/* BOAS-VINDAS NO DESKTOP: NO FLUXO DO HEADER, SEMPRE ABAIXO DAS BARRAS */}
         {showWelcome && (
-          <div className="hidden sm:block mt-1 pointer-events-auto self-start w-full max-w-lg animate-in fade-in slide-in-from-top-3 duration-200">
+          <div ref={welcomeDesktopRef} className="hidden sm:block mt-1 pointer-events-auto self-start w-full max-w-lg animate-in fade-in slide-in-from-top-3 duration-200">
             <WelcomeCard onDismiss={dismissWelcome} onChooseSpace={chooseSpaceFromWelcome} />
           </div>
         )}
@@ -1662,10 +1684,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
       )}
 
       {/* BARRA INFERIOR / HUD & CONTROLES */}
-      <div className="absolute bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-6 pb-[env(safe-area-inset-bottom)] pointer-events-none z-20 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-3 sm:gap-2.5">
+      <div ref={bottomHudRef} className="absolute bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-6 pb-[env(safe-area-inset-bottom)] pointer-events-none z-20 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-3 sm:gap-2.5">
         {/* BOAS-VINDAS NO MOBILE: NO FLUXO DA BARRA INFERIOR, LOGO ACIMA DELA, CENTRO LIVRE */}
         {showWelcome && (
-          <div className="sm:hidden mb-0 pointer-events-auto max-h-[22dvh] flex flex-col animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="sm:hidden mb-0 pointer-events-auto max-h-[40dvh] flex flex-col animate-in fade-in slide-in-from-bottom-3 duration-200">
             <WelcomeCard compact onDismiss={dismissWelcome} onChooseSpace={chooseSpaceFromWelcome} />
           </div>
         )}

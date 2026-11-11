@@ -4,6 +4,8 @@ export const CROP_MAX_SIDE = 1000;
 
 // Upload do anúncio (PNG gerado pelo recorte)
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+// Teto de pixels que o sharp aceita decodificar no upload (protege memória)
+export const MAX_INPUT_PIXELS = 100_000_000;
 
 // Imagem com pelo menos isto de px por pixel do bloco é desenhada suavizada
 export const SMOOTH_MIN_SCALE = 4;

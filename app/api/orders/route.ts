@@ -8,7 +8,8 @@ import {
 } from '@/app/lib/db';
 import { isValidPublicAdId } from '@/app/lib/ad-rules';
 import { validateAdInput } from '@/app/lib/moderation';
-import { validateAdPng } from '@/app/lib/upload-validation';
+import { AdImageError, reencodeAdPng, validateAdPng } from '@/app/lib/upload-validation';
+import { cropScale } from '@/app/lib/crop-scale';
 import type { CreateOrderInput, CreateOrderResponse } from '@/types/orders';
 
 export const dynamic = 'force-dynamic';
@@ -67,6 +68,14 @@ export async function POST(request: NextRequest) {
     const imageError = validateAdPng(buffer);
     if (imageError) {
       return NextResponse.json({ error: imageError }, { status: 400 });
+    }
+    const scale = cropScale(w, h);
+    let imageBytes: Buffer;
+    try {
+      imageBytes = await reencodeAdPng(buffer, w * scale, h * scale);
+    } catch (err) {
+      if (!(err instanceof AdImageError)) throw err;
+      return NextResponse.json({ error: err.message }, { status: 400 });
     }
 
     // Moderação instantânea
@@ -129,7 +138,7 @@ export async function POST(request: NextRequest) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 
     const imageFilePath = path.join(uploadsDir, `${orderId}.png`);
-    fs.writeFileSync(imageFilePath, buffer);
+    fs.writeFileSync(imageFilePath, imageBytes);
 
     const moderationDecision = moderation.moderationStatus === 'review' ? 'review' : 'approved';
 

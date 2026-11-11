@@ -5,7 +5,10 @@ import {
   getDataDir,
   isAreaAvailable,
   createReservedAd,
+  expirePendingByIp,
 } from '@/app/lib/db';
+import { exceedsOrderLimit, getClientIp, ORDER_LIMIT_MSG } from '@/app/lib/order-limits';
+import { hashIp } from '@/app/lib/ip-hash';
 import { isValidPublicAdId } from '@/app/lib/ad-rules';
 import { validateAdInput } from '@/app/lib/moderation';
 import { AdImageError, reencodeAdPng, validateAdPng } from '@/app/lib/upload-validation';
@@ -52,6 +55,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (exceedsOrderLimit(w, h)) {
+      return NextResponse.json({ error: ORDER_LIMIT_MSG }, { status: 400 });
+    }
+
     const pixels = w * h;
     if (pixels < 25 || pixels > 1000000) {
       return NextResponse.json(
@@ -92,6 +99,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // 1 reserva pendente por visitante: a anterior expira e libera a area
+    const ipHash = hashIp(getClientIp(request.headers));
+    if (ipHash) expirePendingByIp(ipHash);
 
     // Checagem de disponibilidade na grade
     const available = isAreaAvailable(x, y, w, h);
@@ -154,6 +165,7 @@ export async function POST(request: NextRequest) {
       image_path: `/api/uploads/${orderId}.png`,
       expires_at: gatewayData.expiresAt,
       moderation_decision: moderationDecision,
+      ip_hash: ipHash,
     });
 
     const responsePayload: CreateOrderResponse = {

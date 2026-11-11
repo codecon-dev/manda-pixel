@@ -4,6 +4,8 @@ import React, { useState, useMemo } from 'react';
 import BuyPanelCrop from './BuyPanelCrop';
 import { validateAdInput, ModerationResult } from '../lib/moderation';
 import { trackCheckoutIniciado } from '../lib/analytics';
+import { exceedsOrderLimit, ORDER_LIMIT_MSG } from '../lib/order-limits';
+import { BLOCK_SIZE } from '../lib/constants';
 
 export interface BuyPanelProps {
   isOpen: boolean;
@@ -37,6 +39,8 @@ export default function BuyPanel({
 
   const pixels = selection.w * selection.h;
   const price = pixels;
+  const widerHitsLimit = exceedsOrderLimit(selection.w + BLOCK_SIZE, selection.h);
+  const tallerHitsLimit = exceedsOrderLimit(selection.w, selection.h + BLOCK_SIZE);
 
   const moderation: ModerationResult = useMemo(() => {
     return validateAdInput({
@@ -159,7 +163,8 @@ export default function BuyPanel({
                 <span className="w-10 text-center font-mono font-bold text-stone-900">{selection.w}px</span>
                 <button
                   type="button"
-                  disabled={selection.x + selection.w >= 1000}
+                  disabled={selection.x + selection.w >= 1000 || widerHitsLimit}
+                  title={widerHitsLimit ? ORDER_LIMIT_MSG : undefined}
                   onClick={() => onResizeStep('w', 5)}
                   className="w-7 h-7 rounded-lg bg-white border border-stone-300 font-bold text-stone-800 disabled:opacity-40 hover:bg-stone-100 transition"
                 >
@@ -182,7 +187,8 @@ export default function BuyPanel({
                 <span className="w-10 text-center font-mono font-bold text-stone-900">{selection.h}px</span>
                 <button
                   type="button"
-                  disabled={selection.y + selection.h >= 1000}
+                  disabled={selection.y + selection.h >= 1000 || tallerHitsLimit}
+                  title={tallerHitsLimit ? ORDER_LIMIT_MSG : undefined}
                   onClick={() => onResizeStep('h', 5)}
                   className="w-7 h-7 rounded-lg bg-white border border-stone-300 font-bold text-stone-800 disabled:opacity-40 hover:bg-stone-100 transition"
                 >

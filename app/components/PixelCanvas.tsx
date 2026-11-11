@@ -18,6 +18,7 @@ import { getHandlePositions, hitTestHandles, HANDLE_CORNER_SIZE_PX } from '../li
 import { AD_LAYER_MAX_ZOOM } from '../lib/constants.ts';
 import { buildAdLayer, drawAdBlock, loadAdImages, type AdImages } from '../lib/ad-layer-cache.ts';
 import { drawGridLines } from '../lib/grid-lines.ts';
+import { exceedsOrderLimit, ORDER_LIMIT_MSG } from '../lib/order-limits.ts';
 import { cellChanged, computeCanvasDpr, type CellKey } from '../lib/canvas-perf.ts';
 
 interface Point {
@@ -1014,8 +1015,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
       if (candX + candW > GRID_SIZE) candW = GRID_SIZE - candX;
       if (candY + candH > GRID_SIZE) candH = GRID_SIZE - candY;
 
-      // Validação de colisão em tempo real
-      if (isAreaFree(candX, candY, candW, candH, blocksRef.current)) {
+      // Teto por pedido: a seleção não cresce além dele
+      if (exceedsOrderLimit(candW, candH)) {
+        setCollisionWarning(ORDER_LIMIT_MSG);
+      } else if (isAreaFree(candX, candY, candW, candH, blocksRef.current)) {
         setSelectedArea({ x: candX, y: candY, w: candW, h: candH });
         setCollisionWarning(null);
       } else {
@@ -1166,8 +1169,9 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
         } else {
           // Espaço livre: seleciona na coordenada encaixada na grade 5x5
           const cur = selectedAreaRef.current;
-          const targetW = cur ? cur.w : 10;
-          const targetH = cur ? cur.h : 10;
+          const keepSize = cur && !exceedsOrderLimit(cur.w, cur.h);
+          const targetW = keepSize ? cur.w : 10;
+          const targetH = keepSize ? cur.h : 10;
 
           if (isAreaFree(blockX, blockY, targetW, targetH, blocksRef.current)) {
             setSelectedArea({ x: blockX, y: blockY, w: targetW, h: targetH });
@@ -1193,6 +1197,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
 
   // Aplica preset rápido validando colisão e limites
   const applyPreset = useCallback((presetW: number, presetH: number) => {
+    if (exceedsOrderLimit(presetW, presetH)) {
+      setCollisionWarning(ORDER_LIMIT_MSG);
+      return;
+    }
     const cur = selectedAreaRef.current;
     if (!cur) {
       const free = findFreeBlockNear(500, 500, presetW, presetH, blocksRef.current);
@@ -1236,6 +1244,13 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
   const adjustDimension = useCallback((type: 'w' | 'h' | 'x' | 'y', delta: number) => {
     const cur = selectedAreaRef.current;
     if (!cur) return;
+
+    const nextW = type === 'w' ? cur.w + delta : cur.w;
+    const nextH = type === 'h' ? cur.h + delta : cur.h;
+    if (delta > 0 && exceedsOrderLimit(nextW, nextH)) {
+      setCollisionWarning(ORDER_LIMIT_MSG);
+      return;
+    }
 
     if (type === 'w') {
       const candW = Math.max(5, cur.w + delta);
@@ -1289,6 +1304,11 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
 
     if (nextW < 5 || nextH < 5 || cur.x + nextW > 1000 || cur.y + nextH > 1000) {
       setCollisionWarning('Limite da grade atingido');
+      return;
+    }
+
+    if (delta > 0 && exceedsOrderLimit(nextW, nextH)) {
+      setCollisionWarning(ORDER_LIMIT_MSG);
       return;
     }
 

@@ -72,6 +72,7 @@ export interface CreateReservedAdParams {
   expires_at?: string;
   moderation_decision?: 'approved' | 'review' | string;
   checkout_url?: string;
+  ip_hash?: string | null;
 }
 
 export function getDataDir(): string {
@@ -123,6 +124,12 @@ export function getDb(): DatabaseSync {
     // Coluna ja existe
   }
 
+  try {
+    db.exec('ALTER TABLE ads ADD COLUMN ip_hash TEXT');
+  } catch {
+    // Coluna ja existe
+  }
+
   global.__mandapixel_db = db;
   return db;
 }
@@ -136,6 +143,18 @@ export function expirePendingReservations(): void {
       AND expires_at IS NOT NULL
       AND (expires_at <= ? OR expires_at <= datetime('now'))
   `).run(nowIso);
+}
+
+/** Expira as reservas ainda vigentes do mesmo visitante (hash do IP). Pedido pago nao e tocado. */
+export function expirePendingByIp(ipHash: string): void {
+  const db = getDb();
+  db.prepare(`
+    UPDATE ads SET status = 'expired'
+    WHERE ip_hash = ?
+      AND status IN ('pending', 'reserved')
+      AND expires_at IS NOT NULL
+      AND expires_at > ?
+  `).run(ipHash, new Date().toISOString());
 }
 
 export function isAreaAvailable(x: number, y: number, w: number, h: number, excludeOrderId?: string): boolean {
@@ -164,12 +183,13 @@ export function createReservedAd(params: CreateReservedAdParams): AdRecord {
   const decision = params.moderation_decision || 'approved';
 
   db.prepare(`
-    INSERT INTO ads (order_id, x, y, w, h, pixels, status, moderation_status, moderation_decision, image_path, link_url, alt_text, checkout_url, created_at, expires_at)
-    VALUES (?, ?, ?, ?, ?, ?, 'reserved', ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO ads (order_id, x, y, w, h, pixels, status, moderation_status, moderation_decision, image_path, link_url, alt_text, checkout_url, created_at, expires_at, ip_hash)
+    VALUES (?, ?, ?, ?, ?, ?, 'reserved', ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     orderId, params.x, params.y, params.w, params.h, pixels,
     decision, decision, params.image_path || null, params.link || null,
-    params.title || null, params.checkout_url || null, createdAt, params.expires_at || null
+    params.title || null, params.checkout_url || null, createdAt, params.expires_at || null,
+    params.ip_hash || null
   );
 
   return {

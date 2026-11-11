@@ -21,7 +21,7 @@ export default function WelcomeCard({ onDismiss, onChooseSpace, compact = false 
   const footerShrink = compact ? 'shrink-0' : '';
 
   return (
-    <div className={`bg-white/98 backdrop-blur-md border-2 border-brand-purple/20 shadow-xl rounded-2xl ${padding} text-stone-900 ${cardLayout}`}>
+    <div className={`bg-white border-2 border-brand-purple/20 shadow-xl rounded-2xl ${padding} text-stone-900 ${cardLayout}`}>
       <div className={`flex items-start justify-between gap-3 ${bodyScroll}`}>
         <div className="flex gap-3">
           <div className={`${iconVisibility} w-8 h-8 rounded-xl bg-purple-100 border border-purple-200 text-brand-purple items-center justify-center shrink-0 font-bold text-base`}>

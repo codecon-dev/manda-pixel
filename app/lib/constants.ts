@@ -10,6 +10,15 @@ export const MAX_INPUT_PIXELS = 100_000_000;
 // Imagem com pelo menos isto de px por pixel do bloco é desenhada suavizada
 export const SMOOTH_MIN_SCALE = 4;
 
+// Desempenho do canvas da home
+export const GRID_SIDE = 1000;
+export const CANVAS_MAX_DPR = 2;
+export const CANVAS_MAX_BACKING_PIXELS = 2_000_000;
+export const FINE_GRID_MIN_ZOOM = 1.2;
+export const MIN_GRID_SPACING_PX = 6;
+// Abaixo deste zoom os anúncios saem do cache 1000x1000 num único drawImage
+export const AD_LAYER_MAX_ZOOM = 4;
+
 // Lado máximo, em px de tela, da imagem ampliada no card do anúncio
 export const AD_CARD_IMAGE_MAX = 160;
 

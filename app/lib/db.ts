@@ -72,7 +72,7 @@ export interface CreateReservedAdParams {
   expires_at?: string;
   moderation_decision?: 'approved' | 'review' | string;
   checkout_url?: string;
-  ip_hash?: string | null;
+  visitor_id?: string | null;
 }
 
 export function getDataDir(): string {
@@ -130,6 +130,13 @@ export function getDb(): DatabaseSync {
     // Coluna ja existe
   }
 
+  try {
+    db.exec('ALTER TABLE ads ADD COLUMN visitor_id TEXT');
+  } catch {
+    // Coluna ja existe
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_ads_visitor ON ads (visitor_id)');
+
   global.__mandapixel_db = db;
   return db;
 }
@@ -145,16 +152,17 @@ export function expirePendingReservations(): void {
   `).run(nowIso);
 }
 
-/** Expira as reservas ainda vigentes do mesmo visitante (hash do IP). Pedido pago nao e tocado. */
-export function expirePendingByIp(ipHash: string): void {
+/** Expira as reservas ainda vigentes do mesmo visitante (cookie). Pedido pago nao e tocado. */
+export function expirePendingByVisitor(visitorId: string): void {
+  if (!visitorId) throw new Error('visitorId é obrigatório');
   const db = getDb();
   db.prepare(`
     UPDATE ads SET status = 'expired'
-    WHERE ip_hash = ?
+    WHERE visitor_id = ?
       AND status IN ('pending', 'reserved')
       AND expires_at IS NOT NULL
       AND expires_at > ?
-  `).run(ipHash, new Date().toISOString());
+  `).run(visitorId, new Date().toISOString());
 }
 
 export function isAreaAvailable(x: number, y: number, w: number, h: number, excludeOrderId?: string): boolean {
@@ -183,13 +191,13 @@ export function createReservedAd(params: CreateReservedAdParams): AdRecord {
   const decision = params.moderation_decision || 'approved';
 
   db.prepare(`
-    INSERT INTO ads (order_id, x, y, w, h, pixels, status, moderation_status, moderation_decision, image_path, link_url, alt_text, checkout_url, created_at, expires_at, ip_hash)
+    INSERT INTO ads (order_id, x, y, w, h, pixels, status, moderation_status, moderation_decision, image_path, link_url, alt_text, checkout_url, created_at, expires_at, visitor_id)
     VALUES (?, ?, ?, ?, ?, ?, 'reserved', ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     orderId, params.x, params.y, params.w, params.h, pixels,
     decision, decision, params.image_path || null, params.link || null,
     params.title || null, params.checkout_url || null, createdAt, params.expires_at || null,
-    params.ip_hash || null
+    params.visitor_id || null
   );
 
   return {

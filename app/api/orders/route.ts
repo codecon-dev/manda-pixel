@@ -5,10 +5,10 @@ import {
   getDataDir,
   isAreaAvailable,
   createReservedAd,
-  expirePendingByIp,
+  expirePendingByVisitor,
 } from '@/app/lib/db';
-import { exceedsOrderLimit, getClientIp, ORDER_LIMIT_MSG } from '@/app/lib/order-limits';
-import { hashIp } from '@/app/lib/ip-hash';
+import { exceedsOrderLimit, ORDER_LIMIT_MSG } from '@/app/lib/order-limits';
+import { resolveVisitorId, VISITOR_COOKIE, VISITOR_COOKIE_MAX_AGE_SECONDS } from '@/app/lib/visitor-id';
 import { isValidPublicAdId } from '@/app/lib/ad-rules';
 import { validateAdInput } from '@/app/lib/moderation';
 import { AdImageError, reencodeAdPng, validateAdPng } from '@/app/lib/upload-validation';
@@ -18,6 +18,19 @@ import type { CreateOrderInput, CreateOrderResponse } from '@/types/orders';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  const visitorId = resolveVisitorId(request.cookies.get(VISITOR_COOKIE)?.value);
+  const response = await createOrder(request, visitorId);
+  response.cookies.set(VISITOR_COOKIE, visitorId, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: VISITOR_COOKIE_MAX_AGE_SECONDS,
+  });
+  return response;
+}
+
+async function createOrder(request: NextRequest, visitorId: string): Promise<NextResponse> {
   try {
     const body: Partial<CreateOrderInput> = await request.json();
     const { x, y, w, h, title, link, imageDataUrl } = body;
@@ -101,8 +114,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 1 reserva pendente por visitante: a anterior expira e libera a area
-    const ipHash = hashIp(getClientIp(request.headers));
-    if (ipHash) expirePendingByIp(ipHash);
+    expirePendingByVisitor(visitorId);
 
     // Checagem de disponibilidade na grade
     const available = isAreaAvailable(x, y, w, h);
@@ -165,7 +177,7 @@ export async function POST(request: NextRequest) {
       image_path: `/api/uploads/${orderId}.png`,
       expires_at: gatewayData.expiresAt,
       moderation_decision: moderationDecision,
-      ip_hash: ipHash,
+      visitor_id: visitorId,
     });
 
     const responsePayload: CreateOrderResponse = {

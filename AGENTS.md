@@ -11,7 +11,7 @@ Roda como Next.js standalone no container `site` (porta 3000), atras do nginx, e
 ## Stack e comandos
 
 - Next.js (App Router) + React + TypeScript strict + Tailwind. `next.config.mjs` com `output: 'standalone'`.
-- Build: `npm run build` (= `next build`). Tipos: `npx tsc --noEmit`. Testes: `node --test --experimental-strip-types tests/`.
+- Build: `npm run build` (= `next build`). Tipos: `npx tsc --noEmit`. Testes: `npm test` (= `node --test --experimental-strip-types tests/*.test.ts`).
 - Dependencias pinadas no `package.json`. Nada que precise de `postinstall` (scripts sao ignorados na instalacao).
 - Banco: `node:sqlite` em `${DATA_DIR}/mandapixel.db` (WAL). Uploads em `${DATA_DIR}/uploads/`. Imagem: `sharp`.
 

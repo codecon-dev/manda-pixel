@@ -20,9 +20,9 @@ export default function PrivacidadePage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-stone-950">Endereço IP</h2>
+        <h2 className="text-xl font-bold text-stone-950">Cookie da reserva</h2>
         <p className="mt-2">
-          Guardamos o IP só para limitar abuso (excesso de tentativas, por exemplo) e por pouco tempo.
+          O site guarda um cookie anônimo no seu navegador para lembrar da sua reserva. Nada de IP.
         </p>
       </section>
 

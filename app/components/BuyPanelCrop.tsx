@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { cropScale } from '../lib/crop-scale.ts';
+import { dominantColorRatio, BLANK_IMAGE_THRESHOLD } from '../lib/dominant-color.ts';
 
 interface BuyPanelCropProps {
   targetW: number;
@@ -19,6 +20,7 @@ export default function BuyPanelCrop({
   error,
 }: BuyPanelCropProps) {
   const [fileError, setFileError] = useState<string | null>(null);
+  const [blankWarning, setBlankWarning] = useState<boolean>(false);
   const [imgObj, setImgObj] = useState<HTMLImageElement | null>(null);
   const [cropZoom, setCropZoom] = useState<number>(1);
   const [cropOffset, setCropOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -55,6 +57,8 @@ export default function BuyPanelCrop({
       const posY = (th - drawH) / 2 + offY;
 
       ctx.drawImage(img, posX, posY, drawW, drawH);
+      const ratio = dominantColorRatio(ctx.getImageData(0, 0, canvas.width, canvas.height).data);
+      setBlankWarning(ratio > BLANK_IMAGE_THRESHOLD);
       const dataUrl = canvas.toDataURL('image/png');
       onCroppedChange(dataUrl);
     },
@@ -96,6 +100,7 @@ export default function BuyPanelCrop({
 
   const handleRemove = () => {
     setImgObj(null);
+    setBlankWarning(false);
     setCropZoom(1);
     setCropOffset({ x: 0, y: 0 });
     onCroppedChange(null);
@@ -178,6 +183,11 @@ export default function BuyPanelCrop({
 
       {(fileError || error) && (
         <p className="text-[11px] text-rose-600 font-medium">{fileError || error}</p>
+      )}
+      {imgObj && blankWarning && (
+        <p role="status" className="text-[11px] text-amber-700 font-medium text-pretty">
+          Sua imagem parece vazia ou de uma cor só. Confira se o logo aparece antes de pagar.
+        </p>
       )}
     </div>
   );

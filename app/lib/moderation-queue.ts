@@ -124,5 +124,6 @@ function mapAdToModerationQueueItem(ad: AdRecord): ModerationQueueItem {
     createdAt: ad.created_at,
     paidAt: ad.paid_at || null,
     expiresAt: ad.expires_at || null,
+    dominantRatio: typeof ad.dominant_ratio === 'number' ? ad.dominant_ratio : null,
   };
 }

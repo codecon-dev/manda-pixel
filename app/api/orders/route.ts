@@ -13,6 +13,7 @@ import { isValidPublicAdId } from '@/app/lib/ad-rules';
 import { validateAdInput } from '@/app/lib/moderation';
 import { AdImageError, reencodeAdPng, validateAdPng } from '@/app/lib/upload-validation';
 import { cropScale } from '@/app/lib/crop-scale';
+import { pngDominantRatio } from '@/app/lib/png-dominant-ratio';
 import type { CreateOrderInput, CreateOrderResponse } from '@/types/orders';
 
 export const dynamic = 'force-dynamic';
@@ -178,6 +179,7 @@ async function createOrder(request: NextRequest, visitorId: string): Promise<Nex
       expires_at: gatewayData.expiresAt,
       moderation_decision: moderationDecision,
       visitor_id: visitorId,
+      dominant_ratio: pngDominantRatio(imageBytes),
     });
 
     const responsePayload: CreateOrderResponse = {

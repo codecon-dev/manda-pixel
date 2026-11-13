@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import type { ModerationQueueItem, ModerationListResponse } from '@/types/orders';
+import { BLANK_IMAGE_THRESHOLD } from '@/app/lib/dominant-color';
 
 export default function ModerationPanel() {
   const [items, setItems] = useState<ModerationQueueItem[]>([]);
@@ -183,6 +184,11 @@ export default function ModerationPanel() {
                     />
                   ) : (
                     <span className="text-xs text-stone-600">Sem imagem</span>
+                  )}
+                  {item.dominantRatio !== null && item.dominantRatio > BLANK_IMAGE_THRESHOLD && (
+                    <span className="mt-2 text-[11px] font-semibold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+                      imagem quase vazia
+                    </span>
                   )}
                   <span className="text-[11px] text-stone-500 mt-2 tabular-nums">
                     {item.w} &times; {item.h} ({item.pixels} px)

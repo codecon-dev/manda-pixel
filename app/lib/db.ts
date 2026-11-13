@@ -57,6 +57,7 @@ export interface AdRecord {
   created_at: string;
   expires_at?: string | null;
   paid_at?: string | null;
+  dominant_ratio?: number | null;
 }
 
 export interface CreateReservedAdParams {
@@ -73,6 +74,7 @@ export interface CreateReservedAdParams {
   moderation_decision?: 'approved' | 'review' | string;
   checkout_url?: string;
   visitor_id?: string | null;
+  dominant_ratio?: number | null;
 }
 
 export function getDataDir(): string {
@@ -137,6 +139,12 @@ export function getDb(): DatabaseSync {
   }
   db.exec('CREATE INDEX IF NOT EXISTS idx_ads_visitor ON ads (visitor_id)');
 
+  try {
+    db.exec('ALTER TABLE ads ADD COLUMN dominant_ratio REAL');
+  } catch {
+    // Coluna ja existe
+  }
+
   global.__mandapixel_db = db;
   return db;
 }
@@ -191,13 +199,13 @@ export function createReservedAd(params: CreateReservedAdParams): AdRecord {
   const decision = params.moderation_decision || 'approved';
 
   db.prepare(`
-    INSERT INTO ads (order_id, x, y, w, h, pixels, status, moderation_status, moderation_decision, image_path, link_url, alt_text, checkout_url, created_at, expires_at, visitor_id)
-    VALUES (?, ?, ?, ?, ?, ?, 'reserved', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO ads (order_id, x, y, w, h, pixels, status, moderation_status, moderation_decision, image_path, link_url, alt_text, checkout_url, created_at, expires_at, visitor_id, dominant_ratio)
+    VALUES (?, ?, ?, ?, ?, ?, 'reserved', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     orderId, params.x, params.y, params.w, params.h, pixels,
     decision, decision, params.image_path || null, params.link || null,
     params.title || null, params.checkout_url || null, createdAt, params.expires_at || null,
-    params.visitor_id || null
+    params.visitor_id || null, params.dominant_ratio ?? null
   );
 
   return {
@@ -206,6 +214,7 @@ export function createReservedAd(params: CreateReservedAdParams): AdRecord {
     image_path: params.image_path || null, link_url: params.link || null,
     alt_text: params.title || null, checkout_url: params.checkout_url || null,
     created_at: createdAt, expires_at: params.expires_at || null, paid_at: null,
+    dominant_ratio: params.dominant_ratio ?? null,
   };
 }
 

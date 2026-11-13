@@ -52,6 +52,8 @@ export interface ModerationQueueItem {
   createdAt: string;
   paidAt?: string | null;
   expiresAt?: string | null;
+  /** Fracao de pixels na cor dominante (0-1). null em pedido antigo ou PNG nao decodificavel. */
+  dominantRatio: number | null;
 }
 
 export interface ModerationListResponse {

@@ -1,5 +1,6 @@
 // Recorte do anúncio: quantos px de imagem por pixel do bloco
-export const CROP_MAX_SCALE = 20;
+// 64: o menor bloco (5x5) precisa de >= 320 px para o card de 160 px CSS sair nítido em tela 2x
+export const CROP_MAX_SCALE = 64;
 export const CROP_MAX_SIDE = 1000;
 
 // Upload do anúncio (PNG gerado pelo recorte)

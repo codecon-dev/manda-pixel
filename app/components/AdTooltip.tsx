@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import type { GridBlock } from '../lib/db';
 import { AD_CARD_IMAGE_MAX, SMOOTH_MIN_SCALE } from '../lib/constants.ts';
+import { adClickPath } from '../lib/ad-rules.ts';
 
 export interface AdTooltipTarget {
   block: GridBlock;
@@ -59,7 +60,7 @@ function PublishedContent({ block, domain, pinned }: { block: GridBlock; domain:
       )}
       {pinned && block.linkUrl && (
         <a
-          href={block.linkUrl}
+          href={adClickPath(block.id)}
           target="_blank"
           rel="sponsored noopener noreferrer nofollow"
           className="block w-full text-center bg-brand-yellow text-stone-950 font-bold rounded-lg px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-yellow"

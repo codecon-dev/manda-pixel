@@ -28,7 +28,7 @@ test('anuncio pago e aprovado retorna dados publicos com numero', () => {
   assert.equal(ad.linkUrl, 'https://exemplo.com.br');
   assert.equal(ad.paidAt, '2026-10-20T10:00:00.000Z');
   assert.deepEqual(Object.keys(ad).sort(), [
-    'altText', 'h', 'imagePath', 'linkUrl', 'number', 'orderId', 'paidAt', 'pixels', 'w', 'x', 'xHandle', 'y',
+    'altText', 'clicks', 'h', 'imagePath', 'linkUrl', 'number', 'orderId', 'paidAt', 'pixels', 'w', 'x', 'xHandle', 'y',
   ]);
 });
 

@@ -145,6 +145,12 @@ export function getDb(): DatabaseSync {
     // Coluna ja existe
   }
 
+  try {
+    db.exec('ALTER TABLE ads ADD COLUMN clicks INTEGER NOT NULL DEFAULT 0');
+  } catch {
+    // Coluna ja existe
+  }
+
   global.__mandapixel_db = db;
   return db;
 }
@@ -227,14 +233,14 @@ export function getAdByOrderId(orderId: string): AdRecord | null {
 type PublicAdRow = Pick<
   AdRecord,
   'order_id' | 'x' | 'y' | 'w' | 'h' | 'pixels' | 'image_path' | 'link_url' | 'alt_text' | 'x_handle' | 'paid_at'
->;
+> & { clicks: number | null };
 
 /** Anuncio no ar com seu numero (#1, #2...). null se o id for invalido ou o anuncio nao estiver no ar. */
 export function getPublicAdById(id: string): PublicAd | null {
   if (typeof id !== 'string' || !isValidPublicAdId(id)) return null;
   const db = getDb();
   const row = db.prepare(`
-    SELECT order_id, x, y, w, h, pixels, image_path, link_url, alt_text, x_handle, paid_at
+    SELECT order_id, x, y, w, h, pixels, image_path, link_url, alt_text, x_handle, paid_at, clicks
     FROM ads WHERE order_id = ? AND ${LIVE_AD_SQL}
   `).get(id) as unknown as PublicAdRow | undefined;
   if (!row) return null;
@@ -251,6 +257,7 @@ export function getPublicAdById(id: string): PublicAd | null {
     imagePath: normalizeImageUrl(row.image_path) ?? null, linkUrl: row.link_url ?? null,
     altText: row.alt_text ?? null, xHandle: row.x_handle ?? null, paidAt: row.paid_at ?? null,
     number: 1 + Number(before.n),
+    clicks: Number(row.clicks ?? 0),
   };
 }
 

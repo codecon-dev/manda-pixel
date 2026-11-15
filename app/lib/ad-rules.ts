@@ -34,3 +34,8 @@ export const PUBLIC_AD_ID_PATTERN = /^[a-z0-9]{1,64}$/;
 export function isValidPublicAdId(id: string): boolean {
   return PUBLIC_AD_ID_PATTERN.test(id);
 }
+
+/** Caminho que conta o clique e redireciona para o link do anuncio (app/r/[id]). */
+export function adClickPath(id: string): string {
+  return `/r/${encodeURIComponent(id)}`;
+}

@@ -24,6 +24,9 @@ export default function PrivacidadePage() {
         <p className="mt-2">
           O site guarda um cookie anônimo no seu navegador para lembrar da sua reserva. Nada de IP.
         </p>
+        <p className="mt-2">
+          Contamos cliques nos anúncios sem guardar IP, cookie ou qualquer dado de quem clicou.
+        </p>
       </section>
 
       <section>

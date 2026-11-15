@@ -5,6 +5,8 @@ import { getPublicAdById } from '@/app/lib/db';
 import { AD_DESCRIPTION_MAX, AD_PAGE_IMAGE_MAX, SITE_URL } from '@/app/lib/constants';
 import { adImageSize } from '@/app/lib/ad-image';
 import { integerScale } from '@/app/lib/png-upscale';
+import { safeHttpUrl } from '@/app/lib/safe-url';
+import { adClickPath } from '@/app/lib/ad-rules';
 import type { PublicAd } from '@/types/ads';
 import ShareOnX from '@/app/components/ShareOnX';
 import BadgeEmbed from '@/app/components/BadgeEmbed';
@@ -19,14 +21,12 @@ function cut(text: string, max: number): string {
   return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
 }
 
-function safeHttpUrl(url: string | null): URL | null {
-  if (!url) return null;
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed : null;
-  } catch {
-    return null; // link malformado: a página mostra o anúncio sem o link
-  }
+const integer = new Intl.NumberFormat('pt-BR');
+
+function clicksLabel(clicks: number): string {
+  if (clicks === 0) return 'Nenhum clique ainda';
+  if (clicks === 1) return '1 clique vindo do Manda Pixel';
+  return `${integer.format(clicks)} cliques vindos do Manda Pixel`;
 }
 
 function formatPaidAt(paidAt: string | null): string | null {
@@ -84,7 +84,7 @@ function AdLinks({ ad }: { ad: PublicAd }) {
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
       {link && (
         <a
-          href={link.toString()}
+          href={adClickPath(ad.orderId)}
           target="_blank"
           rel="sponsored noopener"
           className="font-bold text-[#FCD953] underline underline-offset-4 break-all"
@@ -130,7 +130,10 @@ export default function AdPage({ params }: AdPageProps) {
         )}
 
         {ad.altText && <p className="text-xl font-semibold text-pretty">{ad.altText}</p>}
-        <AdLinks ad={ad} />
+        <div className="flex flex-col gap-1">
+          <AdLinks ad={ad} />
+          <p className="text-sm text-white/80 tabular-nums">{clicksLabel(ad.clicks)}</p>
+        </div>
         {/* getPublicAdById so devolve anuncio no ar (LIVE_AD_SQL, mesmo criterio de isLiveRow) */}
         <ShareOnX adId={ad.orderId} pixels={ad.pixels} variant="visitante" className="self-start" />
         <section aria-labelledby="badge-title" className="flex flex-col gap-3 border-t border-white/20 pt-5">

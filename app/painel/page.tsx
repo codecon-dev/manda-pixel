@@ -3,6 +3,7 @@ import { GoalProgress, StatCard } from "@/app/components/PainelParts";
 import { GOAL_BRL, SITE_URL, TOTAL_PIXELS } from "@/app/lib/constants";
 import { getPainelStats } from "@/app/lib/painel";
 import { getOnlineCount } from "@/app/lib/presence";
+import { getTotalClicks } from "@/app/lib/ad-clicks";
 
 // Le o SQLite a cada acesso; nao pode ser pre-renderizada no build.
 export const dynamic = "force-dynamic";
@@ -34,6 +35,7 @@ export function generateMetadata(): Metadata {
 export default function PainelPage() {
   const stats = getPainelStats();
   const online = getOnlineCount();
+  const clicks = getTotalClicks();
 
   return (
     <div className="min-h-dvh bg-[#FCD953]/20 text-stone-900">
@@ -55,6 +57,7 @@ export default function PainelPage() {
           <StatCard label="Receita" value={brl.format(stats.revenueBRL)} detail="pagamentos confirmados" />
           <StatCard label="Anúncios no ar" value={integer.format(stats.liveAds)} detail="publicados na grade" />
           <StatCard label="Online agora" value={integer.format(online)} detail="aproximado" />
+          <StatCard label="Cliques nos anúncios" value={integer.format(clicks)} detail="vindos da grade e das páginas" />
         </dl>
 
         <div className="mt-6">

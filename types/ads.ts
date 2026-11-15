@@ -13,7 +13,12 @@ export type PublicAd = {
   paidAt: string | null;
   /** Ordem do anuncio entre os que estao no ar (1 = primeiro pago). */
   number: number;
+  /** Cliques vindos do site (rota /r/[id]). */
+  clicks: number;
 };
+
+/** Resultado da rota /r/[id]: 404 ou redirect para o link gravado do anuncio. */
+export type AdRedirectResult = { status: 404 } | { status: 302; location: string };
 
 /** Ponto da grade para abrir a home focada (?x=&y=). */
 export type GridFocus = {

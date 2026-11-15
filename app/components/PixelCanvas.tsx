@@ -1176,7 +1176,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
             // Toque: primeiro mostra o card com a imagem ampliada e o botão "Visitar site"
             setTouchCard({ block: clickedBlock, screenX: e.clientX, screenY: e.clientY });
           } else if (clickedBlock.state === 'published' && clickedBlock.linkUrl) {
-            window.open(clickedBlock.linkUrl, '_blank', 'noopener,noreferrer');
+            window.open('/r/' + encodeURIComponent(clickedBlock.id), '_blank', 'noopener,noreferrer');
           } else if (clickedBlock.state === 'in_review') {
             setNotification({
               type: 'warning',

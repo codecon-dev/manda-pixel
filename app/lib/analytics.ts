@@ -62,6 +62,19 @@ export function trackCheckoutIniciado(props: CheckoutIniciadoProps): void {
   });
 }
 
+/** Falha ao criar o pedido: so status HTTP (ou 'rede') e pixels, nada do anuncio. */
+export interface CheckoutErroProps {
+  status: number | 'rede';
+  pixels: number;
+}
+
+export function captureCheckoutError(props: CheckoutErroProps): void {
+  captureSafe('checkout_erro', {
+    status: props.status,
+    pixels: props.pixels,
+  });
+}
+
 export function trackCheckoutRetorno(props: CheckoutRetornoProps): void {
   captureSafe('checkout_retorno', {
     orderId: props.orderId,

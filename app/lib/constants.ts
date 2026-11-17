@@ -2,6 +2,18 @@
 // 64: o menor bloco (5x5) precisa de >= 320 px para o card de 160 px CSS sair nítido em tela 2x
 export const CROP_MAX_SCALE = 64;
 export const CROP_MAX_SIDE = 1000;
+// Diferença de proporção imagem/bloco a partir da qual o padrão vira "Encaixar" (contain)
+export const CROP_CONTAIN_ASPECT_TOLERANCE = 0.1;
+// Zoom do recorte (slider)
+export const CROP_ZOOM_MIN = 1;
+export const CROP_ZOOM_MAX = 3;
+export const CROP_ZOOM_STEP = 0.05;
+// Bloco com lado até isto: prévia com image-rendering pixelated
+export const CROP_PIXELATED_MAX_SIDE = 40;
+// Largura da prévia do recorte (px CSS)
+export const CROP_FRAME_MIN_PX = 120;
+export const CROP_FRAME_MAX_PX = 240;
+export const CROP_FRAME_PX_PER_PIXEL = 4;
 
 // Upload do anúncio (PNG gerado pelo recorte)
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;

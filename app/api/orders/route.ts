@@ -16,9 +16,21 @@ import { cropScale } from '@/app/lib/crop-scale';
 import { pngDominantRatio } from '@/app/lib/png-dominant-ratio';
 import type { CreateOrderInput, CreateOrderResponse } from '@/types/orders';
 
+import { clientKey, createRateLimiter } from '@/app/lib/rate-limit';
+import { ORDERS_RATE_LIMIT, RATE_LIMIT_WINDOW_MS } from '@/app/lib/constants';
+
 export const dynamic = 'force-dynamic';
 
+const ordersLimiter = createRateLimiter({ limit: ORDERS_RATE_LIMIT, windowMs: RATE_LIMIT_WINDOW_MS });
+
 export async function POST(request: NextRequest) {
+  const limited = ordersLimiter.check(clientKey(request.headers));
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: 'Muitas tentativas seguidas. Espere um minuto e tente de novo.' },
+      { status: 429, headers: { 'Retry-After': String(limited.retryAfterSec) } }
+    );
+  }
   const visitorId = resolveVisitorId(request.cookies.get(VISITOR_COOKIE)?.value);
   const response = await createOrder(request, visitorId);
   response.cookies.set(VISITOR_COOKIE, visitorId, {

@@ -10,7 +10,7 @@ const GATEWAY_STATUSES: ReadonlySet<string> = new Set(['pending', 'paid', 'expir
 function localFallback(orderId: string): OrderStatusResult {
   const localAd = getAdByOrderId(orderId);
   if (!localAd) {
-    return { httpStatus: 502, body: { error: 'Pedido não encontrado e gateway inacessível.' } };
+    return { httpStatus: 502, body: { error: 'Pedido não encontrado.' } };
   }
   const status: GatewayOrder['status'] =
     localAd.status === 'paid' || localAd.status === 'expired' ? localAd.status : 'pending';
@@ -46,14 +46,14 @@ export async function readOrderStatus(orderId: unknown, fetchFn: FetchFn = fetch
 
   if (!gatewayRes.ok) {
     if (gatewayRes.status === 404) {
-      return { httpStatus: 404, body: { error: 'Pedido não encontrado no gateway.' } };
+      return { httpStatus: 404, body: { error: 'Pedido não encontrado.' } };
     }
-    return { httpStatus: gatewayRes.status, body: { error: 'Falha ao consultar gateway.' } };
+    return { httpStatus: gatewayRes.status, body: { error: 'Falha ao consultar o pagamento.' } };
   }
 
   const gatewayOrder = (await gatewayRes.json()) as GatewayOrder;
   if (!GATEWAY_STATUSES.has(gatewayOrder?.status)) {
-    return { httpStatus: 502, body: { error: 'Resposta inválida do gateway.' } };
+    return { httpStatus: 502, body: { error: 'Resposta inválida do sistema de pagamento.' } };
   }
   const ad = applyGatewayOrder(orderId, gatewayOrder);
   return { httpStatus: 200, body: { order: gatewayOrder, ad } };

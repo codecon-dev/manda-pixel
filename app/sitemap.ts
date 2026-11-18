@@ -13,7 +13,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
   return [
     { url: `${SITE_URL}/`, changeFrequency: "daily", priority: 1 },
-    { url: `${SITE_URL}/painel`, changeFrequency: "hourly", priority: 0.6 },
     { url: `${SITE_URL}/previa`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/como-funciona`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/termos`, changeFrequency: "monthly", priority: 0.3 },

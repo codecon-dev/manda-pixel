@@ -27,3 +27,11 @@ export function cleanExpiredPresence(ttlMs = PRESENCE_TTL_MS): Map<string, numbe
 export function getOnlineCount(): number {
   return cleanExpiredPresence().size;
 }
+
+// Front gera 'mp_<base36>_<base36>' (PixelCanvas); UUID tambem passa.
+const CLIENT_ID_PATTERN = /^[A-Za-z0-9_-]{8,64}$/;
+
+/** clientId do heartbeat: so letras, numeros, '-' e '_', de 8 a 64 caracteres. */
+export function isValidClientId(value: unknown): value is string {
+  return typeof value === 'string' && CLIENT_ID_PATTERN.test(value);
+}

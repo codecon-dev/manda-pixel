@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  poweredByHeader: false,
   experimental: {
     serverComponentsExternalPackages: ['sharp'],
     // sharp carrega o binário de @img/* por caminho dinâmico; garante que vá para o standalone

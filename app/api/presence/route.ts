@@ -1,21 +1,27 @@
 import { NextResponse } from 'next/server';
-import { cleanExpiredPresence } from '@/app/lib/presence';
+import { cleanExpiredPresence, isValidClientId } from '@/app/lib/presence';
+import { clientKey, createRateLimiter } from '@/app/lib/rate-limit';
+import { PRESENCE_RATE_LIMIT, RATE_LIMIT_WINDOW_MS } from '@/app/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const clientId = searchParams.get('clientId');
-  const map = cleanExpiredPresence();
+const presenceLimiter = createRateLimiter({ limit: PRESENCE_RATE_LIMIT, windowMs: RATE_LIMIT_WINDOW_MS });
 
-  if (clientId && typeof clientId === 'string' && clientId.length <= 64) {
-    map.set(clientId, Date.now());
+function registerHeartbeat(request: Request, clientId: unknown): NextResponse {
+  if (!isValidClientId(clientId)) {
+    return NextResponse.json({ error: 'Pedido inválido.' }, { status: 400 });
   }
-
-  const count = Math.max(clientId ? 1 : 0, map.size);
-
+  const limited = presenceLimiter.check(clientKey(request.headers));
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: 'Muitas tentativas seguidas. Espere um minuto e tente de novo.' },
+      { status: 429, headers: { 'Retry-After': String(limited.retryAfterSec) } }
+    );
+  }
+  const map = cleanExpiredPresence();
+  map.set(clientId, Date.now());
   return NextResponse.json(
-    { count, active: map.size },
+    { count: Math.max(1, map.size), active: map.size },
     {
       status: 200,
       headers: {
@@ -25,33 +31,13 @@ export async function GET(request: Request) {
   );
 }
 
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  return registerHeartbeat(request, searchParams.get('clientId'));
+}
+
 export async function POST(request: Request) {
-  const map = cleanExpiredPresence();
-  try {
-    const body = await request.json().catch(() => ({}));
-    const clientId = typeof body.clientId === 'string' ? body.clientId.slice(0, 64) : null;
-    if (clientId) {
-      map.set(clientId, Date.now());
-    }
-    const count = Math.max(clientId ? 1 : 0, map.size);
-    return NextResponse.json(
-      { count, active: map.size },
-      {
-        status: 200,
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate',
-        },
-      }
-    );
-  } catch {
-    return NextResponse.json(
-      { count: Math.max(1, map.size) },
-      {
-        status: 200,
-        headers: {
-          'Cache-Control': 'no-store',
-        },
-      }
-    );
-  }
+  const body: unknown = await request.json().catch(() => null);
+  const clientId = body && typeof body === 'object' ? (body as { clientId?: unknown }).clientId : undefined;
+  return registerHeartbeat(request, clientId);
 }

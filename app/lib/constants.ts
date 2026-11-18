@@ -100,3 +100,10 @@ export const EXPERIMENT_DAYS = 365;
 
 // Intervalo mínimo entre varreduras de imagens de pedidos expirados
 export const EXPIRED_UPLOAD_SWEEP_MS = 60 * 60 * 1000;
+
+/** Limite de taxa por chave de cliente (memoria do processo, janela fixa). */
+export const RATE_LIMIT_WINDOW_MS = 60_000;
+export const ORDERS_RATE_LIMIT = 20;
+export const PRESENCE_RATE_LIMIT = 30;
+export const RATE_LIMIT_MAX_KEYS = 5000;
+export const CLIENT_KEY_MAX_LENGTH = 64;

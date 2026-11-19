@@ -7,7 +7,8 @@ import {
   trackCheckoutRetorno,
   trackAnuncioPublicado,
 } from '@/app/lib/analytics';
-import type { GatewayOrder, OrderSyncResponse } from '@/types/orders';
+import type { OrderSyncResponse, PublicOrder } from '@/types/orders';
+import { PIXEL_PRICE_BRL } from '@/app/lib/constants';
 import ShareAdLinks from '@/app/components/ShareAdLinks';
 import ShareOnX from '@/app/components/ShareOnX';
 import { SHAREABLE_ORDER_STATUSES } from '@/app/lib/share';
@@ -16,7 +17,7 @@ function ObrigadoContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('order');
 
-  const [order, setOrder] = useState<GatewayOrder | null>(null);
+  const [order, setOrder] = useState<PublicOrder | null>(null);
   const [ad, setAd] = useState<OrderSyncResponse['ad'] | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -162,7 +163,7 @@ function ObrigadoContent() {
             </div>
             <div className="flex justify-between">
               <span className="text-stone-500">Valor:</span>
-              <span className="font-bold text-stone-900">R$ {order?.value.toLocaleString('pt-BR')},00</span>
+              <span className="font-bold text-stone-900">R$ {((order?.pixels ?? 0) * PIXEL_PRICE_BRL).toLocaleString('pt-BR')},00</span>
             </div>
           </div>
           {order?.checkoutUrl && (

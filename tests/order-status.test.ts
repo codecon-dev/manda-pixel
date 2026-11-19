@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createReservedAd, getAdByOrderId, getDataDir, getDb, syncOrderStatusWithGateway } from '../app/lib/db.ts';
-import { readOrderStatus } from '../app/lib/order-status.ts';
+import { readOrderStatus, toPublicAd, toPublicOrder } from '../app/lib/order-status.ts';
 import { InvalidOrderIdError, applyGatewayOrder, gatewayOrderUrl } from '../app/lib/gateway-sync.ts';
 import { removeExpiredAdUpload, sweepExpiredAdUploads } from '../app/lib/ad-image.ts';
 import { checkoutReturnNotice } from '../app/lib/checkout-return.ts';
@@ -110,4 +110,71 @@ test('aviso de retorno segue o status lido', () => {
   assert.equal(checkoutReturnNotice('toString'), null);
   assert.equal(checkoutReturnNotice(undefined), null);
   assert.equal(checkoutReturnNotice('pending')?.message.includes('liberada'), false);
+});
+
+const ORDER_KEYS = ['orderId', 'status', 'pixels', 'checkoutUrl'];
+const AD_KEYS = ['status', 'moderation_status', 'moderation_decision', 'image_path', 'alt_text', 'x', 'y', 'w', 'h', 'link_url'];
+
+function fullGatewayStub(status: string) {
+  return async (): Promise<Response> => {
+    const body = {
+      orderId: 'x', pixels: 25, value: 25, status, createdAt: '2026-11-01T00:00:00Z',
+      paidAt: '2026-11-01T00:01:00Z', expiresAt: '2026-11-01T00:30:00Z',
+      checkoutUrl: 'https://checkout.exemplo/abc', customer: { name: 'Fulano', email: 'f@x.com', cpf: '000' },
+    };
+    return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+}
+
+test('resposta pública do gateway só tem campos da whitelist', async () => {
+  const id = 'whitelist1';
+  reserve(id);
+  getDb().prepare(`UPDATE ads SET visitor_id = 'v-secret' WHERE order_id = ?`).run(id);
+  const result = await readOrderStatus(id, fullGatewayStub('pending'));
+  assert.equal(result.httpStatus, 200);
+  assert.ok('order' in result.body);
+  const { order, ad } = result.body;
+  for (const key of Object.keys(order)) assert.ok(ORDER_KEYS.includes(key), `order.${key}`);
+  for (const key of ['value', 'createdAt', 'paidAt', 'expiresAt', 'customer']) assert.equal(key in order, false, key);
+  assert.ok(ad);
+  for (const key of Object.keys(ad)) assert.ok(AD_KEYS.includes(key), `ad.${key}`);
+  for (const key of ['visitor_id', 'dominant_ratio', 'order_id', 'created_at', 'checkout_url', 'x_handle']) {
+    assert.equal(key in ad, false, key);
+  }
+  assert.equal(order.checkoutUrl, 'https://checkout.exemplo/abc');
+});
+
+test('toPublicAd descarta campos fora da whitelist da linha do banco', () => {
+  const row = {
+    order_id: 'a', x: 5, y: 10, w: 5, h: 5, pixels: 25, status: 'published', moderation_status: 'approved',
+    moderation_decision: 'approved', image_path: 'a.png', alt_text: 'alt', link_url: 'https://exemplo.com.br',
+    visitor_id: 'v1', dominant_ratio: 0.9, created_at: 'c', paid_at: 'p', expires_at: 'e', checkout_url: 'u', title: 't',
+  };
+  const ad = toPublicAd(row);
+  assert.deepEqual(Object.keys(ad ?? {}).sort(), [...AD_KEYS].sort());
+  assert.equal(toPublicAd(null), null);
+});
+
+test('checkoutUrl só aparece com status pending', () => {
+  const base = { orderId: 'a', pixels: 25, value: 25, createdAt: 'c', checkoutUrl: 'https://checkout.exemplo/a' };
+  assert.equal(toPublicOrder({ ...base, status: 'pending' }).checkoutUrl, 'https://checkout.exemplo/a');
+  for (const status of ['paid', 'expired', 'refunded']) {
+    const order = toPublicOrder({ ...base, status });
+    assert.equal('checkoutUrl' in order, false, status);
+    assert.deepEqual(Object.keys(order).sort(), ['orderId', 'pixels', 'status']);
+  }
+});
+
+test('chave __proto__ na entrada não vaza nem polui o protótipo', () => {
+  const rawOrder = JSON.parse('{"orderId":"a","pixels":25,"status":"pending","__proto__":{"polluted":"sim","value":99}}');
+  const rawAd = JSON.parse('{"status":"published","moderation_status":"approved","x":0,"y":0,"w":5,"h":5,"__proto__":{"polluted":"sim","visitor_id":"v"}}');
+  const order = toPublicOrder(rawOrder);
+  const ad = toPublicAd(rawAd);
+  assert.equal(Object.prototype.hasOwnProperty.call(order, '__proto__'), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(ad, '__proto__'), false);
+  assert.equal('value' in order, false);
+  assert.equal(ad && 'visitor_id' in ad, false);
+  assert.equal(JSON.stringify(order).includes('polluted'), false);
+  assert.equal(JSON.stringify(ad).includes('polluted'), false);
+  assert.equal(({} as Record<string, unknown>).polluted, undefined);
 });

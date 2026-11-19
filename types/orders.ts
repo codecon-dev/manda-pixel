@@ -30,9 +30,26 @@ export interface GatewayOrder {
   checkoutUrl?: string;
 }
 
+/** Pedido como o navegador ve: whitelist, sem valor, datas nem dado do comprador. */
+export interface PublicOrder {
+  orderId: string;
+  status: GatewayOrder['status'];
+  pixels: number;
+  /** So presente com status 'pending'. */
+  checkoutUrl?: string;
+}
+
+/** Anuncio como o navegador ve: whitelist de AdRecord, sem visitor_id nem medidas internas. */
+export type PublicAd = Pick<AdRecord, 'status' | 'moderation_status' | 'x' | 'y' | 'w' | 'h'> & {
+  moderation_decision: string | null;
+  image_path: string | null;
+  alt_text: string | null;
+  link_url: string | null;
+};
+
 export interface OrderSyncResponse {
-  order: GatewayOrder;
-  ad: AdRecord | null;
+  order: PublicOrder;
+  ad: PublicAd | null;
 }
 
 export interface ModerationQueueItem {

@@ -271,6 +271,14 @@ export function listLiveAdIds(): { orderId: string; paidAt: string | null }[] {
     .map((r) => ({ orderId: r.order_id, paidAt: r.paid_at ?? null }));
 }
 
+/** Todos os anuncios no ar (sem filtro de id), base da numeracao #N de buildAdvertiserList. */
+export function listLiveAdRefs(): { orderId: string; paidAt: string | null }[] {
+  const rows = getDb()
+    .prepare(`SELECT order_id, paid_at FROM ads WHERE ${LIVE_AD_SQL}`)
+    .all() as unknown as Pick<AdRecord, 'order_id' | 'paid_at'>[];
+  return rows.map((r) => ({ orderId: r.order_id, paidAt: r.paid_at ?? null }));
+}
+
 export function syncOrderStatusWithGateway(
   orderId: string,
   gatewayOrder: { status: string; paidAt?: string; expiresAt?: string }

@@ -1587,6 +1587,10 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
               Como funciona
             </a>
             <span className="hidden sm:inline text-stone-600">•</span>
+            <a href="/anunciantes" className="hidden sm:inline whitespace-nowrap hover:text-purple-950 transition">
+              Anunciantes
+            </a>
+            <span className="hidden sm:inline text-stone-600">•</span>
             <a href="/termos" className="hidden sm:inline whitespace-nowrap hover:text-purple-950 transition">
               Termos
             </a>

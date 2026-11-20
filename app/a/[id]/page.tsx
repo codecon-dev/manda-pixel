@@ -7,6 +7,7 @@ import { adImageSize } from '@/app/lib/ad-image';
 import { integerScale } from '@/app/lib/png-upscale';
 import { safeHttpUrl } from '@/app/lib/safe-url';
 import { adClickPath } from '@/app/lib/ad-rules';
+import { advertiserName } from '@/app/lib/advertisers';
 import type { PublicAd } from '@/types/ads';
 import ShareOnX from '@/app/components/ShareOnX';
 import BadgeEmbed from '@/app/components/BadgeEmbed';
@@ -41,7 +42,9 @@ function formatPaidAt(paidAt: string | null): string | null {
 export function generateMetadata({ params }: AdPageProps): Metadata {
   const ad = getPublicAdById(params.id);
   if (!ad) return { title: 'Anúncio não encontrado no Manda Pixel', robots: { index: false } };
-  const title = `Anúncio #${ad.number} no Manda Pixel`;
+  const title = ad.altText?.trim()
+    ? `${advertiserName(ad.altText, ad.number)} - anúncio #${ad.number} no Manda Pixel`
+    : `Anúncio #${ad.number} no Manda Pixel`;
   const description = ad.altText
     ? cut(ad.altText, AD_DESCRIPTION_MAX)
     : `${ad.pixels.toLocaleString('pt-BR')} pixels comprados a R$ 1 cada na grade do Manda Pixel.`;
@@ -115,7 +118,10 @@ export default function AdPage({ params }: AdPageProps) {
         <Link href="/" className="text-sm font-bold text-[#FCD953] hover:underline">
           Manda Pixel
         </Link>
-        <h1 className="text-5xl font-black text-balance tabular-nums sm:text-6xl">Anúncio #{ad.number}</h1>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-4xl font-black text-balance break-words sm:text-5xl">{advertiserName(ad.altText, ad.number)}</h1>
+          <p className="text-lg font-bold text-white/80 tabular-nums">Anúncio #{ad.number}</p>
+        </div>
 
         {ad.imagePath && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -162,6 +168,9 @@ export default function AdPage({ params }: AdPageProps) {
         <p className="text-sm text-white/90 text-pretty">
           1 milhão de pixels a R$ 1 cada, em blocos a partir de 5×5. Quem compra fica na grade.
         </p>
+        <Link href="/anunciantes" className="self-start text-sm font-bold text-[#FCD953] hover:underline">
+          Ver todos os anunciantes
+        </Link>
       </article>
     </main>
   );

@@ -4,21 +4,50 @@ const LINK_CLASS =
 type WelcomeCardProps = {
   onDismiss: () => void;
   onChooseSpace: () => void;
-  /** compact: folha do mobile (texto maior para leitura, padding menor). */
+  /** compact: banner curto do mobile (titulo, 2 linhas, Escolher espaco e fechar). */
   compact?: boolean;
 };
 
+/** Banner curto do mobile: titulo em 1 linha, ate 2 linhas de texto, CTA e fechar sempre visiveis (sem scroll). */
+function CompactWelcome({ onDismiss, onChooseSpace }: Omit<WelcomeCardProps, 'compact'>) {
+  return (
+    <div className="bg-white border-2 border-brand-purple/20 shadow-md rounded-2xl p-3 text-stone-900 flex flex-col gap-1">
+      <div className="flex items-center justify-between gap-2 shrink-0">
+        <h2 className="min-w-0 truncate text-sm font-pixel text-stone-950 leading-tight">Bem-vindo ao Manda Pixel</h2>
+        <button
+          onClick={onDismiss}
+          className="shrink-0 text-stone-700 hover:text-stone-900 font-bold text-sm p-1 rounded-lg hover:bg-stone-100 transition leading-none"
+          aria-label="Fechar mensagem de boas-vindas"
+        >
+          ✕
+        </button>
+      </div>
+      <p className="text-sm leading-snug text-stone-900 line-clamp-2 text-pretty">
+        1 milhão de pixels a R$ 1. Escolha o lugar e seu logo fica pra sempre.
+      </p>
+      <div className="mt-1 flex justify-end shrink-0">
+        <button
+          onClick={onChooseSpace}
+          className="shrink-0 px-3.5 py-2 rounded-xl bg-brand-purple hover:bg-brand-purpleDark text-white text-xs font-bold transition shadow-sm"
+        >
+          Escolher espaço
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function WelcomeCard({ onDismiss, onChooseSpace, compact = false }: WelcomeCardProps) {
-  const padding = compact ? 'p-2.5 sm:p-3' : 'p-4';
-  const titleSize = compact ? 'text-base sm:text-lg' : 'text-base';
-  const bodySize = compact ? 'text-sm leading-snug' : 'text-xs leading-relaxed';
+  if (compact) return <CompactWelcome onDismiss={onDismiss} onChooseSpace={onChooseSpace} />;
+  const padding = 'p-4';
+  const titleSize = 'text-base';
+  const bodySize = 'text-xs leading-relaxed';
   const noteSize = 'text-xs leading-snug';
-  const footerSpacing = compact ? 'mt-2 pt-1.5' : 'mt-3 pt-2';
-  const iconVisibility = compact ? 'hidden' : 'flex';
-  // compact (mobile): texto rola dentro do card, linha de botoes fica sempre visivel.
-  const cardLayout = compact ? 'flex flex-col min-h-0 max-h-full' : '';
-  const bodyScroll = compact ? 'min-h-0 flex-1 overflow-y-auto' : '';
-  const footerShrink = compact ? 'shrink-0' : '';
+  const footerSpacing = 'mt-3 pt-2';
+  const iconVisibility = 'flex';
+  const cardLayout = '';
+  const bodyScroll = '';
+  const footerShrink = '';
 
   return (
     <div className={`bg-white border-2 border-brand-purple/20 shadow-md rounded-2xl ${padding} text-stone-900 ${cardLayout}`}>

@@ -50,7 +50,7 @@ export type HandleType = 'nw' | 'ne' | 'se' | 'sw' | 'n' | 's' | 'w' | 'e' | 'mo
 // Breakpoint `sm` do Tailwind: abaixo dele o card de boas-vindas fica na base da tela
 const MOBILE_BREAKPOINT = 640;
 // Fração da altura que o ponto focado sobe (de 50% para ~30%) quando o card de boas-vindas está aberto
-const WELCOME_FOCUS_SHIFT = 0.2;
+const WELCOME_FOCUS_SHIFT = 0.1;
 
 // Projeção: screenY = (wy - cam.y) * zoom + h / 2, então somar ao cam.y faz o ponto focado subir na tela.
 function welcomeCameraOffsetY(zoom: number, welcomeOpen: boolean): number {
@@ -1514,7 +1514,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
             </a>
             <button
               onClick={handleCtaBuyPixels}
-              className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-brand-purple hover:bg-brand-purpleDark text-white font-bold transition shadow-sm text-xs active:scale-95 whitespace-nowrap shrink-0"
+              className="hidden sm:inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-brand-purple hover:bg-brand-purpleDark text-white font-bold transition shadow-sm text-xs active:scale-95 whitespace-nowrap shrink-0"
             >
               <svg className="w-3.5 h-3.5 text-brand-yellow shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
@@ -1549,7 +1549,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
           </div>
 
           {/* Legenda compacta dos 4 estados */}
-          <div className="pointer-events-none order-last lg:order-none flex flex-nowrap justify-center whitespace-nowrap items-center gap-2 lg:gap-2.5 bg-white border border-stone-300 shadow-sm px-2 py-1 lg:px-3 lg:py-1.5 rounded-xl text-[11px] text-stone-800 font-semibold">
+          <div className="pointer-events-none order-last lg:order-none hidden sm:flex flex-nowrap justify-center whitespace-nowrap items-center gap-2 lg:gap-2.5 bg-white border border-stone-300 shadow-sm px-2 py-1 lg:px-3 lg:py-1.5 rounded-xl text-[11px] text-stone-800 font-semibold">
             <div className="flex items-center gap-1 lg:gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-white border border-stone-400" />
               <span>Livre</span>
@@ -1691,7 +1691,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
       <div ref={bottomHudRef} className="absolute bottom-3 inset-x-3 sm:bottom-6 sm:inset-x-6 pb-[env(safe-area-inset-bottom)] pointer-events-none z-20 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-3 sm:gap-2.5">
         {/* BOAS-VINDAS NO MOBILE: NO FLUXO DA BARRA INFERIOR, LOGO ACIMA DELA, CENTRO LIVRE */}
         {showWelcome && (
-          <div className="sm:hidden mb-0 pointer-events-auto max-h-[40dvh] flex flex-col animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="sm:hidden mb-1 pointer-events-auto max-h-[22dvh] flex flex-col animate-in fade-in slide-in-from-bottom-3 duration-200">
             <WelcomeCard compact onDismiss={dismissWelcome} onChooseSpace={chooseSpaceFromWelcome} />
           </div>
         )}
@@ -1824,7 +1824,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
           </div>
         ) : (
           /* HUD QUANDO NÃO HÁ SELEÇÃO ATIVA */
-          <div className="pointer-events-auto bg-white border border-stone-300 shadow-md rounded-2xl p-2.5 sm:px-4 sm:py-3 flex items-center justify-between gap-3 tabular-nums">
+          <div className={`${showWelcome ? 'hidden sm:flex' : 'flex'} pointer-events-auto bg-white border border-stone-300 shadow-md rounded-2xl p-2.5 sm:px-4 sm:py-3 items-center justify-between gap-3 tabular-nums`}>
             <div className="flex flex-col min-w-0">
               <div className="flex flex-nowrap items-center gap-x-1.5 gap-y-0 min-w-0 text-xs">
                 <span className="inline-block w-2.5 h-2.5 rounded-full bg-stone-400 shrink-0" />
@@ -1834,7 +1834,7 @@ export default function PixelCanvas({ blocks = [], stats, onRefresh, focus }: Pi
                 <span className="hidden sm:inline text-xs text-stone-900 font-bold sm:font-semibold whitespace-nowrap shrink-0">5×5 px mín.</span>
               </div>
               <span className="text-xs text-stone-900 font-semibold sm:font-medium leading-snug sm:leading-4 mt-0.5">
-                Toque na grade ou clique em <strong>Comprar pixels</strong>
+                Escolha um lugar na grade ou use <strong>Comprar pixels</strong>
               </span>
             </div>
 
